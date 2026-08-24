@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Public+Sans:wght@400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#DFE2DB;font-family:'Public Sans',system-ui,sans-serif;color:#1C2420;-webkit-font-smoothing:antialiased}
+  ::selection{background:#2F4B3C;color:#F1F3EE}
+  input,button,select,textarea{font-family:inherit;color:inherit}
+  a{color:inherit}
+</style>
+</helmet>
+<div style="min-height:100vh">
+
+  <!-- REVIEW TOOLBAR -->
+  <div style="position:sticky;top:0;z-index:50;background:#1C2420;color:#DFE2DB;display:flex;align-items:center;gap:18px;padding:9px 16px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,0.08)">
+    <span style="font-family:'Fraunces',serif;font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#F1F3EE">Mise</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#8C9A94">mockup set</span>
+    <div style="display:flex;gap:2px;flex-wrap:wrap">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="7">
+        <button onClick="{{ n.on }}" style="background:transparent;border:none;padding:6px 10px;font-size:12.5px;font-weight:500;color:#B9C2BC;cursor:pointer;border-radius:6px;position:relative" style-hover="background:rgba(255,255,255,0.06);color:#F1F3EE">
+          {{ n.label }}
+          <sc-if value="{{ n.active }}"><span style="position:absolute;left:10px;right:10px;bottom:1px;height:2px;background:#E4B73F;border-radius:2px"></span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
+      <div style="display:flex;background:rgba(255,255,255,0.07);border-radius:7px;padding:2px">
+        <button onClick="{{ setDesktop }}" style="background:transparent;border:none;padding:5px 11px;font-size:11px;font-weight:600;color:#B9C2BC;cursor:pointer;border-radius:5px" style-hover="color:#fff">Desktop</button>
+        <button onClick="{{ setMobile }}" style="background:transparent;border:none;padding:5px 11px;font-size:11px;font-weight:600;color:#B9C2BC;cursor:pointer;border-radius:5px" style-hover="color:#fff">Mobile</button>
+      </div>
+      <sc-if value="{{ viewIsMobile }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#E4B73F;min-width:52px">mobile</span></sc-if>
+      <sc-if value="{{ viewIsDesktop }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8C9A94;min-width:52px">desktop</span></sc-if>
+      <button onClick="{{ toggleSignedIn }}" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);padding:5px 12px;font-size:11px;font-weight:600;color:#F1F3EE;cursor:pointer;border-radius:7px" style-hover="background:rgba(255,255,255,0.13)">{{ signLabel }}</button>
+    </div>
+  </div>
+
+  <!-- FRAME AREA -->
+  <div style="padding:26px;display:flex;justify-content:center">
+    <div style="width:{{ frameWidth }};max-width:100%;background:#F1F3EE;border-radius:14px;overflow:hidden;box-shadow:0 24px 60px -24px rgba(28,36,32,0.4),0 2px 0 rgba(255,255,255,0.6) inset;border:1px solid rgba(28,36,32,0.1);min-height:640px">
+
+      <!-- ===================== LANDING ===================== -->
+      <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <!-- landing nav -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid rgba(28,36,32,0.07)">
+          <div style="display:flex;align-items:baseline;gap:10px">
+            <span style="font-family:'Fraunces',serif;font-size:24px;font-weight:600;letter-spacing:-0.02em">Mise</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#8C9A94;padding-bottom:2px">mise en place</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:22px">
+            <button onClick="{{ navBrowse }}" style="background:none;border:none;font-size:14px;font-weight:500;color:#1C2420;cursor:pointer" style-hover="color:#2F4B3C">Browse recipes</button>
+            <sc-if value="{{ signedOut }}"><button onClick="{{ navAuth }}" style="background:none;border:1px solid rgba(28,36,32,0.2);padding:8px 15px;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="border-color:#2F4B3C">Log in / Sign up</button></sc-if>
+            <sc-if value="{{ signedIn }}"><button onClick="{{ navAccount }}" style="display:flex;align-items:center;gap:8px;background:none;border:1px solid rgba(28,36,32,0.2);padding:6px 12px 6px 8px;border-radius:20px;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="border-color:#2F4B3C"><span style="width:24px;height:24px;border-radius:50%;background:#2F4B3C;color:#F1F3EE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">R</span>Account</button></sc-if>
+          </div>
+        </div>
+
+        <!-- hero -->
+        <div style="display:grid;grid-template-columns:{{ heroCols }};gap:48px;align-items:center;padding:64px 40px 56px;max-width:1180px;margin:0 auto">
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#2F4B3C;margin-bottom:20px">Recipe search, measured &amp; fast</div>
+            <h1 style="font-family:'Fraunces',serif;font-weight:600;font-size:56px;line-height:1.02;letter-spacing:-0.025em;margin:0 0 22px">Find the recipe. Skip the life story.</h1>
+            <p style="font-size:17px;line-height:1.55;color:#42504A;margin:0 0 30px;max-width:30em">Filter by ingredients, nutrition, cookware, time, cost, and diet — then get a shopping list in seconds. Everything measured before you commit, like a good kitchen.</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:26px">
+              <button onClick="{{ navBrowse }}" style="background:#2F4B3C;color:#F1F3EE;border:none;padding:14px 24px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 2px 0 rgba(28,36,32,0.15)" style-hover="background:#25402F">Browse recipes</button>
+              <button onClick="{{ navAuth }}" style="background:transparent;color:#1C2420;border:1px solid rgba(28,36,32,0.25);padding:14px 24px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer" style-hover="border-color:#2F4B3C">Sign up free</button>
+            </div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6B776F;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <span>1,240 recipes</span><span style="color:#C7CEC7">·</span><span>18 filters</span><span style="color:#C7CEC7">·</span><span>0 backstories</span>
+            </div>
+          </div>
+          <!-- mise en place placeholder grid -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+            <sc-for list="{{ miseTiles }}" as="t" hint-placeholder-count="9">
+              <div style="aspect-ratio:1;border-radius:12px;background:repeating-linear-gradient(135deg,#E4E7E0,#E4E7E0 9px,#DCE0D8 9px,#DCE0D8 18px);border:1px solid rgba(28,36,32,0.07);display:flex;align-items:flex-end;padding:9px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#7B857D;background:#F1F3EE;padding:2px 5px;border-radius:4px">{{ t.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- feature highlights -->
+        <div style="background:#EAEDE6;border-top:1px solid rgba(28,36,32,0.07);padding:56px 40px">
+          <div style="max-width:1180px;margin:0 auto">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#8C9A94;margin-bottom:28px">What you actually get</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px">
+              <sc-for list="{{ features }}" as="f" hint-placeholder-count="4">
+                <div style="background:#F6F7F3;border:1px solid rgba(28,36,32,0.08);border-radius:12px;padding:24px">
+                  <div style="width:34px;height:34px;border-radius:9px;background:#2F4B3C;margin-bottom:16px;display:flex;align-items:center;justify-content:center">
+                    <span style="width:14px;height:14px;border:2.5px solid #E4B73F;border-radius:{{ f.iconRadius }}"></span>
+                  </div>
+                  <h3 style="font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin:0 0 8px;letter-spacing:-0.01em">{{ f.title }}</h3>
+                  <p style="font-size:14px;line-height:1.5;color:#4C5A53;margin:0">{{ f.desc }}</p>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- why built -->
+        <div style="padding:64px 40px">
+          <div style="max-width:720px;margin:0 auto;text-align:center">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#2F4B3C;margin-bottom:20px">Why we built this</div>
+            <p style="font-family:'Fraunces',serif;font-size:26px;line-height:1.4;font-weight:400;letter-spacing:-0.01em;margin:0 0 20px;color:#26302A">We love cooking. We do not love scrolling past a thousand words about someone's grandmother to reach a list of six ingredients.</p>
+            <p style="font-size:16px;line-height:1.6;color:#4C5A53;margin:0">Mise treats a recipe like what it is — a spec. Time, servings, calories, spice, cost, and the exact things you'll buy, right at the top. The warmth stays here, on this page. Everything past it is built to get you cooking faster.</p>
+          </div>
+        </div>
+
+        <!-- footer cta -->
+        <div style="background:#2F4B3C;color:#F1F3EE;padding:52px 40px;text-align:center">
+          <h2 style="font-family:'Fraunces',serif;font-size:34px;font-weight:600;letter-spacing:-0.02em;margin:0 0 22px">Ready when you are.</h2>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <button onClick="{{ navBrowse }}" style="background:#F1F3EE;color:#1C2420;border:none;padding:13px 24px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#fff">Browse recipes</button>
+            <button onClick="{{ navAuth }}" style="background:transparent;color:#F1F3EE;border:1px solid rgba(255,255,255,0.35);padding:13px 24px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer" style-hover="border-color:#E4B73F;color:#E4B73F">Create an account</button>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== BROWSE ===================== -->
+      <sc-if value="{{ isBrowse }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <!-- app nav -->
+        <div style="display:flex;align-items:center;gap:20px;padding:14px 26px;border-bottom:1px solid rgba(28,36,32,0.09);background:#F1F3EE;position:sticky;top:0;z-index:10">
+          <button onClick="{{ navLanding }}" style="background:none;border:none;font-family:'Fraunces',serif;font-size:21px;font-weight:600;letter-spacing:-0.02em;cursor:pointer;padding:0">Mise</button>
+          <div style="flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:#E7EAE3;border:1px solid rgba(28,36,32,0.09);border-radius:9px;padding:8px 12px">
+            <span style="width:13px;height:13px;border:2px solid #8C9A94;border-radius:50%;position:relative;flex:none"></span>
+            <input placeholder="Search recipes or ingredients" style="border:none;background:none;outline:none;font-size:14px;width:100%">
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:16px">
+            <button onClick="{{ navShopping }}" style="background:none;border:none;font-size:13.5px;font-weight:500;cursor:pointer" style-hover="color:#2F4B3C">Shopping list</button>
+            <sc-if value="{{ signedOut }}"><button onClick="{{ navAuth }}" style="background:#2F4B3C;color:#F1F3EE;border:none;padding:8px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#25402F">Log in / Sign up</button></sc-if>
+            <sc-if value="{{ signedIn }}"><button onClick="{{ navAccount }}" style="width:32px;height:32px;border-radius:50%;background:#2F4B3C;color:#F1F3EE;border:none;font-size:12px;font-weight:700;cursor:pointer">R</button></sc-if>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:{{ contentCols }};align-items:start">
+          <!-- FILTER RAIL (desktop sidebar) -->
+          <sc-if value="{{ railAsSidebar }}">
+          <aside style="border-right:1px solid rgba(28,36,32,0.09);padding:22px 20px;position:sticky;top:61px;align-self:start">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px">
+              <span style="font-family:'Fraunces',serif;font-size:17px;font-weight:600">Filters</span>
+              <button style="background:none;border:none;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8C9A94;cursor:pointer;letter-spacing:0.04em" style-hover="color:#C1481E">clear all</button>
+            </div>
+
+            <!-- ingredient search -->
+            <div style="margin-bottom:20px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94;margin-bottom:8px">Ingredients</div>
+              <div style="display:flex;align-items:center;gap:6px;background:#E7EAE3;border:1px solid rgba(28,36,32,0.09);border-radius:7px;padding:7px 10px">
+                <input placeholder="e.g. chickpeas" style="border:none;background:none;outline:none;font-size:13px;width:100%">
+              </div>
+            </div>
+
+            <!-- time chips -->
+            <div style="margin-bottom:20px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94;margin-bottom:9px">Total time</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 9px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer" style-hover="border-color:#2F4B3C">&lt; 20 min</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 9px;border-radius:16px;background:#2F4B3C;color:#F1F3EE;cursor:pointer">&lt; 30 min</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 9px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer" style-hover="border-color:#2F4B3C">&lt; 45 min</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 9px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer" style-hover="border-color:#2F4B3C">any</span>
+              </div>
+            </div>
+
+            <!-- servings -->
+            <div style="margin-bottom:20px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94;margin-bottom:9px">Servings</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 11px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer" style-hover="border-color:#2F4B3C">1–2</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 11px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer" style-hover="border-color:#2F4B3C">3–4</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 11px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer" style-hover="border-color:#2F4B3C">5+</span>
+              </div>
+            </div>
+
+            <!-- looped groups -->
+            <sc-for list="{{ filterGroups }}" as="g" hint-placeholder-count="3">
+              <div style="margin-bottom:20px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94;margin-bottom:9px">{{ g.label }}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px">
+                  <sc-for list="{{ g.options }}" as="o" hint-placeholder-count="4">
+                    <sc-if value="{{ o.on }}"><span style="font-size:12.5px;padding:5px 10px;border-radius:16px;background:#2F4B3C;color:#F1F3EE;cursor:pointer">{{ o.name }}</span></sc-if>
+                    <sc-if value="{{ o.off }}"><span style="font-size:12.5px;padding:5px 10px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer" style-hover="border-color:#2F4B3C">{{ o.name }}</span></sc-if>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+
+            <!-- spice slider -->
+            <div style="margin-bottom:20px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94">Max spice</span>
+                <span style="display:flex;gap:3px">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#C1481E"></span>
+                  <span style="width:8px;height:8px;border-radius:50%;background:#C1481E"></span>
+                  <span style="width:8px;height:8px;border-radius:50%;background:#C1481E"></span>
+                  <span style="width:8px;height:8px;border-radius:50%;border:1.5px solid #C7CEC7"></span>
+                </span>
+              </div>
+              <div style="height:4px;background:#D8DCD4;border-radius:3px;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:72%;background:#C1481E;border-radius:3px"></div><div style="position:absolute;left:72%;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:#F1F3EE;border:2px solid #C1481E"></div></div>
+            </div>
+
+            <!-- cost slider -->
+            <div style="margin-bottom:20px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94">Max cost / serving</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#8a6a12">$5.00</span>
+              </div>
+              <div style="height:4px;background:#D8DCD4;border-radius:3px;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:60%;background:#8C9A94;border-radius:3px"></div><div style="position:absolute;left:60%;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:#F1F3EE;border:2px solid #2F4B3C"></div></div>
+            </div>
+
+            <!-- allergens (paprika-coded) -->
+            <div style="padding-top:18px;border-top:1px solid rgba(28,36,32,0.09)">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#C1481E;margin-bottom:4px">Avoid allergens</div>
+              <div style="font-size:11px;color:#8C9A94;margin-bottom:10px">Recipes containing these are hidden.</div>
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <sc-for list="{{ allergens }}" as="a" hint-placeholder-count="6">
+                  <label style="display:flex;align-items:center;gap:9px;font-size:13.5px;cursor:pointer">
+                    <span style="width:16px;height:16px;border-radius:4px;border:1.5px solid rgba(28,36,32,0.25);flex:none"></span>{{ a.name }}
+                  </label>
+                </sc-for>
+              </div>
+            </div>
+          </aside>
+          </sc-if>
+
+          <!-- RESULTS -->
+          <div style="padding:22px 26px 44px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+              <div style="display:flex;align-items:baseline;gap:10px">
+                <h1 style="font-family:'Fraunces',serif;font-size:26px;font-weight:600;margin:0;letter-spacing:-0.02em">Recipes</h1>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C9A94">{{ resultCount }} results</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <!-- mobile filter trigger -->
+                <sc-if value="{{ viewIsMobile }}"><button onClick="{{ openFilters }}" style="display:flex;align-items:center;gap:7px;background:#2F4B3C;color:#F1F3EE;border:none;padding:8px 13px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer"><span style="width:12px;height:12px;border-top:2px solid #F1F3EE;border-bottom:2px solid #F1F3EE"></span>Filters</button></sc-if>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C9A94">sort:</span>
+                <span style="font-size:13px;font-weight:600;border-bottom:1.5px solid #2F4B3C;padding-bottom:1px;cursor:pointer">Quickest first</span>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:{{ gridCols }};gap:18px">
+              <sc-for list="{{ cards }}" as="c" hint-placeholder-count="6">
+                <div style="background:#FBFBF8;border:1px solid rgba(28,36,32,0.09);border-radius:12px;overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .15s" style-hover="box-shadow:0 10px 24px -12px rgba(28,36,32,0.35);transform:translateY(-2px)" onClick="{{ c.open }}">
+                  <div style="position:relative;aspect-ratio:4/3;background:repeating-linear-gradient(135deg,#E4E7E0,#E4E7E0 9px,#DCE0D8 9px,#DCE0D8 18px);display:flex;align-items:flex-end;padding:10px">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#7B857D;background:#F1F3EE;padding:2px 6px;border-radius:4px">{{ c.photo }}</span>
+                    <button onClick="{{ c.fav }}" style="position:absolute;top:9px;right:9px;width:30px;height:30px;border-radius:50%;background:rgba(241,243,238,0.92);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1">
+                      <sc-if value="{{ c.saved }}"><span style="color:#E4B73F">★</span></sc-if>
+                      <sc-if value="{{ c.notSaved }}"><span style="color:#8C9A94">☆</span></sc-if>
+                    </button>
+                  </div>
+                  <div style="padding:14px 15px 16px">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#8C9A94;margin-bottom:6px">{{ c.cuisine }}</div>
+                    <h3 style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;line-height:1.15;margin:0 0 12px;letter-spacing:-0.01em">{{ c.title }}</h3>
+                    <!-- SPEC STRIP -->
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#4C5A53;padding-top:11px;border-top:1px solid rgba(28,36,32,0.08)">
+                      <span>{{ c.time }}m</span><span style="color:#C7CEC7">·</span>
+                      <span>{{ c.servings }} srv</span><span style="color:#C7CEC7">·</span>
+                      <span>{{ c.cal }} cal</span><span style="color:#C7CEC7">·</span>
+                      <span style="display:flex;gap:3px;align-items:center">
+                        <sc-for list="{{ c.spiceDots }}" as="d" hint-placeholder-count="4">
+                          <sc-if value="{{ d.on }}"><span style="width:7px;height:7px;border-radius:50%;background:#C1481E"></span></sc-if>
+                          <sc-if value="{{ d.off }}"><span style="width:7px;height:7px;border-radius:50%;border:1px solid #C7CEC7"></span></sc-if>
+                        </sc-for>
+                      </span><span style="color:#C7CEC7">·</span>
+                      <span style="background:#F4E4B6;color:#7a5c10;padding:1px 6px;border-radius:5px;font-weight:600">${{ c.cost }}</span>
+                    </div>
+                    <sc-if value="{{ c.hasAllergens }}">
+                      <div style="margin-top:10px;display:flex;align-items:center;gap:6px;font-size:11px;color:#C1481E"><span style="width:6px;height:6px;border-radius:50%;background:#C1481E"></span>contains {{ c.allergens }}</div>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- MOBILE FILTER SHEET -->
+        <sc-if value="{{ filtersOpen }}">
+          <div style="position:fixed;inset:0;z-index:60;background:rgba(28,36,32,0.4);display:flex;align-items:flex-end" onClick="{{ closeFilters }}">
+            <div style="background:#F1F3EE;width:100%;border-radius:16px 16px 0 0;max-height:80vh;overflow:auto;padding:20px 22px 30px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                <span style="font-family:'Fraunces',serif;font-size:19px;font-weight:600">Filters</span>
+                <button onClick="{{ closeFilters }}" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8C9A94">×</button>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94;margin-bottom:9px">Total time</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:6px 11px;border-radius:16px;border:1px solid rgba(28,36,32,0.16)">&lt; 20 min</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:6px 11px;border-radius:16px;background:#2F4B3C;color:#F1F3EE">&lt; 30 min</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:6px 11px;border-radius:16px;border:1px solid rgba(28,36,32,0.16)">any</span>
+              </div>
+              <sc-for list="{{ filterGroups }}" as="g" hint-placeholder-count="3">
+                <div style="margin-bottom:18px">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94;margin-bottom:9px">{{ g.label }}</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px">
+                    <sc-for list="{{ g.options }}" as="o" hint-placeholder-count="4">
+                      <sc-if value="{{ o.on }}"><span style="font-size:12.5px;padding:6px 11px;border-radius:16px;background:#2F4B3C;color:#F1F3EE">{{ o.name }}</span></sc-if>
+                      <sc-if value="{{ o.off }}"><span style="font-size:12.5px;padding:6px 11px;border-radius:16px;border:1px solid rgba(28,36,32,0.16)">{{ o.name }}</span></sc-if>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+              <button onClick="{{ closeFilters }}" style="width:100%;background:#2F4B3C;color:#F1F3EE;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:6px">Show {{ resultCount }} recipes</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+      </sc-if>
+
+      <!-- ===================== RECIPE DETAIL ===================== -->
+      <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <!-- app nav -->
+        <div style="display:flex;align-items:center;gap:20px;padding:14px 26px;border-bottom:1px solid rgba(28,36,32,0.09);background:#F1F3EE;position:sticky;top:0;z-index:10">
+          <button onClick="{{ navLanding }}" style="background:none;border:none;font-family:'Fraunces',serif;font-size:21px;font-weight:600;letter-spacing:-0.02em;cursor:pointer;padding:0">Mise</button>
+          <button onClick="{{ navBrowse }}" style="background:none;border:none;font-size:13px;font-weight:500;color:#4C5A53;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="color:#2F4B3C"><span style="font-family:'IBM Plex Mono',monospace">←</span> All recipes</button>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:16px">
+            <button onClick="{{ navShopping }}" style="background:none;border:none;font-size:13.5px;font-weight:500;cursor:pointer" style-hover="color:#2F4B3C">Shopping list</button>
+            <sc-if value="{{ signedOut }}"><button onClick="{{ navAuth }}" style="background:#2F4B3C;color:#F1F3EE;border:none;padding:8px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Log in / Sign up</button></sc-if>
+            <sc-if value="{{ signedIn }}"><button onClick="{{ navAccount }}" style="width:32px;height:32px;border-radius:50%;background:#2F4B3C;color:#F1F3EE;border:none;font-size:12px;font-weight:700;cursor:pointer">R</button></sc-if>
+          </div>
+        </div>
+
+        <div style="padding:26px 26px 48px;max-width:1220px;margin:0 auto">
+          <!-- title block -->
+          <div style="margin-bottom:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94">{{ sel.cuisine }}</div>
+          <h1 style="font-family:'Fraunces',serif;font-size:40px;font-weight:600;letter-spacing:-0.025em;margin:0 0 16px;line-height:1.05">{{ sel.title }}</h1>
+
+          <!-- SPEC STRIP -->
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:14px;color:#26302A;padding:12px 0;border-top:1px solid rgba(28,36,32,0.12);border-bottom:1px solid rgba(28,36,32,0.12);margin-bottom:26px">
+            <span><span style="color:#8C9A94">time </span>{{ sel.time }} min</span><span style="color:#C7CEC7">·</span>
+            <span><span style="color:#8C9A94">serves </span>{{ servings }}</span><span style="color:#C7CEC7">·</span>
+            <span><span style="color:#8C9A94">cal </span>{{ sel.cal }}</span><span style="color:#C7CEC7">·</span>
+            <span style="display:flex;gap:4px;align-items:center"><span style="color:#8C9A94">spice</span>
+              <sc-for list="{{ sel.spiceDots }}" as="d" hint-placeholder-count="4">
+                <sc-if value="{{ d.on }}"><span style="width:9px;height:9px;border-radius:50%;background:#C1481E"></span></sc-if>
+                <sc-if value="{{ d.off }}"><span style="width:9px;height:9px;border-radius:50%;border:1px solid #C7CEC7"></span></sc-if>
+              </sc-for>
+            </span><span style="color:#C7CEC7">·</span>
+            <span style="background:#F4E4B6;color:#7a5c10;padding:2px 8px;border-radius:6px;font-weight:600">${{ sel.cost }} / serving</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:{{ detailCols }};gap:26px;align-items:start">
+
+            <!-- COL 1: image + actions -->
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="aspect-ratio:4/5;border-radius:14px;background:repeating-linear-gradient(135deg,#E4E7E0,#E4E7E0 10px,#DCE0D8 10px,#DCE0D8 20px);border:1px solid rgba(28,36,32,0.08);display:flex;align-items:flex-end;padding:12px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7B857D;background:#F1F3EE;padding:3px 7px;border-radius:5px">{{ sel.photo }}</span>
+              </div>
+              <button onClick="{{ navShopping }}" style="background:#2F4B3C;color:#F1F3EE;border:none;padding:13px;border-radius:10px;font-size:14.5px;font-weight:600;cursor:pointer" style-hover="background:#25402F">Add to shopping list</button>
+              <button onClick="{{ sel.fav }}" style="display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;border:1px solid rgba(28,36,32,0.22);padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#E4B73F">
+                <sc-if value="{{ sel.saved }}"><span style="color:#E4B73F;font-size:16px">★</span> Saved to library</sc-if>
+                <sc-if value="{{ sel.notSaved }}"><span style="color:#8C9A94;font-size:16px">☆</span> Save to library</sc-if>
+              </button>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#4C5A53;margin-top:2px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#8C9A94">diet</span>{{ sel.diet }}
+              </div>
+            </div>
+
+            <!-- COL 2: ingredients -->
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+                <h2 style="font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin:0;letter-spacing:-0.01em">Ingredients</h2>
+                <div style="display:flex;align-items:center;gap:0;border:1px solid rgba(28,36,32,0.16);border-radius:8px;overflow:hidden">
+                  <button onClick="{{ decServ }}" style="background:#EAEDE6;border:none;width:30px;height:30px;font-size:16px;cursor:pointer;color:#2F4B3C" style-hover="background:#dfe3db">–</button>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;min-width:42px;text-align:center">{{ servings }} srv</span>
+                  <button onClick="{{ incServ }}" style="background:#EAEDE6;border:none;width:30px;height:30px;font-size:16px;cursor:pointer;color:#2F4B3C" style-hover="background:#dfe3db">+</button>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column">
+                <sc-for list="{{ selIngredients }}" as="i" hint-placeholder-count="8">
+                  <div style="display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid rgba(28,36,32,0.07)">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:#2F4B3C;min-width:66px;flex:none">{{ i.qty }} {{ i.unit }}</span>
+                    <span style="font-size:14px;line-height:1.35">{{ i.name }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8C9A94;margin-top:12px">quantities scale with servings</div>
+            </div>
+
+            <!-- COL 3: instructions -->
+            <div>
+              <h2 style="font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin:0 0 14px;letter-spacing:-0.01em">Method</h2>
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <sc-for list="{{ sel.steps }}" as="st" hint-placeholder-count="5">
+                  <div style="display:flex;gap:14px;align-items:flex-start">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#F1F3EE;background:#2F4B3C;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px">{{ st.n }}</span>
+                    <p style="font-size:14.5px;line-height:1.55;margin:0;color:#26302A">{{ st.text }}</p>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <!-- COL 4: nutrition / cookware / notes -->
+            <div style="display:flex;flex-direction:column;gap:22px">
+              <div style="background:#EAEDE6;border:1px solid rgba(28,36,32,0.08);border-radius:12px;padding:16px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94;margin-bottom:12px">Nutrition / serving</div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <sc-for list="{{ sel.nutrition }}" as="n" hint-placeholder-count="6">
+                    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+                      <span style="font-size:13px;color:#4C5A53">{{ n.label }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600">{{ n.val }} {{ n.unit }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#8C9A94;margin-top:12px;padding-top:10px;border-top:1px solid rgba(28,36,32,0.08)">auto-calculated · est.</div>
+              </div>
+
+              <div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94;margin-bottom:10px">Cookware</div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px">
+                  <sc-for list="{{ sel.cookware }}" as="cw" hint-placeholder-count="2">
+                    <span style="font-size:13px;padding:6px 11px;border-radius:8px;background:#EAEDE6;border:1px solid rgba(28,36,32,0.08)">{{ cw }}</span>
+                  </sc-for>
+                </div>
+              </div>
+
+              <sc-if value="{{ sel.hasAllergens }}">
+                <div style="border:1px solid rgba(193,72,30,0.3);background:rgba(193,72,30,0.05);border-radius:10px;padding:12px 14px">
+                  <div style="display:flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#C1481E;margin-bottom:5px"><span style="width:7px;height:7px;border-radius:50%;background:#C1481E"></span>Allergen warning</div>
+                  <div style="font-size:13px;color:#8a3416">Contains {{ sel.allergens }}.</div>
+                </div>
+              </sc-if>
+
+              <div>
+                <button onClick="{{ toggleNotes }}" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:0;cursor:pointer;margin-bottom:10px">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94">Notes</span>
+                  <sc-if value="{{ detailNotesOpen }}"><span style="color:#8C9A94;font-size:12px">▲</span></sc-if>
+                  <sc-if value="{{ detailNotesClosed }}"><span style="color:#8C9A94;font-size:12px">▼</span></sc-if>
+                </button>
+                <sc-if value="{{ detailNotesOpen }}"><p style="font-size:14px;line-height:1.55;margin:0;color:#26302A;font-style:italic;font-family:'Fraunces',serif">{{ sel.notes }}</p></sc-if>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== ACCOUNT ===================== -->
+      <sc-if value="{{ isAccount }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <!-- app nav -->
+        <div style="display:flex;align-items:center;gap:20px;padding:14px 26px;border-bottom:1px solid rgba(28,36,32,0.09);background:#F1F3EE;position:sticky;top:0;z-index:10">
+          <button onClick="{{ navLanding }}" style="background:none;border:none;font-family:'Fraunces',serif;font-size:21px;font-weight:600;letter-spacing:-0.02em;cursor:pointer;padding:0">Mise</button>
+          <button onClick="{{ navBrowse }}" style="background:none;border:none;font-size:13.5px;font-weight:500;color:#4C5A53;cursor:pointer" style-hover="color:#2F4B3C">Browse recipes</button>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:16px">
+            <button onClick="{{ navShopping }}" style="background:none;border:none;font-size:13.5px;font-weight:500;cursor:pointer" style-hover="color:#2F4B3C">Shopping list</button>
+            <span style="width:32px;height:32px;border-radius:50%;background:#2F4B3C;color:#F1F3EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">R</span>
+          </div>
+        </div>
+
+        <div style="padding:32px 30px 48px;max-width:1180px;margin:0 auto">
+          <!-- profile header -->
+          <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-bottom:26px;border-bottom:1px solid rgba(28,36,32,0.1);margin-bottom:24px">
+            <span style="width:60px;height:60px;border-radius:50%;background:#2F4B3C;color:#F1F3EE;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:26px;font-weight:600;flex:none">R</span>
+            <div>
+              <h1 style="font-family:'Fraunces',serif;font-size:26px;font-weight:600;margin:0;letter-spacing:-0.02em">Riley Ndlovu</h1>
+              <div style="font-size:13.5px;color:#4C5A53;margin-top:2px">riley@example.com</div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:10px">
+              <button style="background:transparent;border:1px solid rgba(28,36,32,0.2);padding:9px 15px;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="border-color:#2F4B3C">Edit profile</button>
+              <button onClick="{{ signOut }}" style="background:transparent;border:1px solid rgba(28,36,32,0.2);padding:9px 15px;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;color:#C1481E" style-hover="border-color:#C1481E">Sign out</button>
+            </div>
+          </div>
+
+          <!-- tabs -->
+          <div style="display:flex;gap:6px;margin-bottom:26px">
+            <sc-if value="{{ tabLibrary }}"><button onClick="{{ setLibrary }}" style="background:#1C2420;color:#F1F3EE;border:none;padding:9px 16px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer">My Library</button></sc-if>
+            <sc-if value="{{ tabBook }}"><button onClick="{{ setLibrary }}" style="background:transparent;color:#4C5A53;border:1px solid rgba(28,36,32,0.15);padding:9px 16px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#2F4B3C">My Library</button></sc-if>
+            <sc-if value="{{ tabBook }}"><button onClick="{{ setBook }}" style="background:#1C2420;color:#F1F3EE;border:none;padding:9px 16px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer">My Recipe Book</button></sc-if>
+            <sc-if value="{{ tabLibrary }}"><button onClick="{{ setBook }}" style="background:transparent;color:#4C5A53;border:1px solid rgba(28,36,32,0.15);padding:9px 16px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#2F4B3C">My Recipe Book</button></sc-if>
+          </div>
+
+          <!-- LIBRARY -->
+          <sc-if value="{{ tabLibrary }}">
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:18px">
+              <h2 style="font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin:0">Saved recipes</h2>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C9A94">{{ savedCount }} favorited</span>
+            </div>
+            <div style="display:grid;grid-template-columns:{{ gridCols }};gap:18px">
+              <sc-for list="{{ savedCards }}" as="c" hint-placeholder-count="2">
+                <div style="background:#FBFBF8;border:1px solid rgba(28,36,32,0.09);border-radius:12px;overflow:hidden;cursor:pointer" style-hover="box-shadow:0 10px 24px -12px rgba(28,36,32,0.35)" onClick="{{ c.open }}">
+                  <div style="position:relative;aspect-ratio:4/3;background:repeating-linear-gradient(135deg,#E4E7E0,#E4E7E0 9px,#DCE0D8 9px,#DCE0D8 18px);display:flex;align-items:flex-end;padding:10px">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#7B857D;background:#F1F3EE;padding:2px 6px;border-radius:4px">{{ c.photo }}</span>
+                    <span style="position:absolute;top:9px;right:9px;width:30px;height:30px;border-radius:50%;background:rgba(241,243,238,0.92);display:flex;align-items:center;justify-content:center;color:#E4B73F;font-size:14px">★</span>
+                  </div>
+                  <div style="padding:14px 15px 16px">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#8C9A94;margin-bottom:6px">{{ c.cuisine }}</div>
+                    <h3 style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;line-height:1.15;margin:0 0 12px;letter-spacing:-0.01em">{{ c.title }}</h3>
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#4C5A53;padding-top:11px;border-top:1px solid rgba(28,36,32,0.08)">
+                      <span>{{ c.time }}m</span><span style="color:#C7CEC7">·</span>
+                      <span>{{ c.servings }} srv</span><span style="color:#C7CEC7">·</span>
+                      <span>{{ c.cal }} cal</span><span style="color:#C7CEC7">·</span>
+                      <span style="background:#F4E4B6;color:#7a5c10;padding:1px 6px;border-radius:5px;font-weight:600">${{ c.cost }}</span>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- RECIPE BOOK -->
+          <sc-if value="{{ tabBook }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+              <div style="display:flex;align-items:baseline;gap:10px">
+                <h2 style="font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin:0">Your recipes</h2>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C9A94">private to you</span>
+              </div>
+              <button onClick="{{ navCreate }}" style="display:flex;align-items:center;gap:8px;background:#2F4B3C;color:#F1F3EE;border:none;padding:10px 16px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#25402F"><span style="font-family:'IBM Plex Mono',monospace;font-size:16px;line-height:1">+</span> Create recipe</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ bookRecipes }}" as="b" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:16px;background:#FBFBF8;border:1px solid rgba(28,36,32,0.09);border-radius:11px;padding:14px 16px;cursor:pointer" style-hover="border-color:rgba(28,36,32,0.2)" onClick="{{ b.open }}">
+                  <span style="width:44px;height:44px;border-radius:8px;background:repeating-linear-gradient(135deg,#E4E7E0,#E4E7E0 6px,#DCE0D8 6px,#DCE0D8 12px);flex:none"></span>
+                  <div style="flex:1;min-width:0">
+                    <h3 style="font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:0 0 4px;letter-spacing:-0.01em">{{ b.title }}</h3>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C9A94;display:flex;gap:8px"><span>{{ b.time }}m</span><span style="color:#C7CEC7">·</span><span>{{ b.servings }} srv</span></div>
+                  </div>
+                  <sc-if value="{{ b.isPending }}"><span style="display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a6a12;background:#F4E4B6;padding:5px 10px;border-radius:14px"><span style="width:6px;height:6px;border-radius:50%;background:#E4B73F"></span>Pending review</span></sc-if>
+                  <sc-if value="{{ b.isPublished }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4C5A53;background:#EAEDE6;padding:5px 10px;border-radius:14px">Published</span></sc-if>
+                  <button style="background:none;border:1px solid rgba(28,36,32,0.16);padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Edit</button>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== CREATE / EDIT ===================== -->
+      <sc-if value="{{ isCreate }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display:flex;align-items:center;gap:20px;padding:14px 26px;border-bottom:1px solid rgba(28,36,32,0.09);background:#F1F3EE;position:sticky;top:0;z-index:10">
+          <button onClick="{{ navLanding }}" style="background:none;border:none;font-family:'Fraunces',serif;font-size:21px;font-weight:600;letter-spacing:-0.02em;cursor:pointer;padding:0">Mise</button>
+          <button onClick="{{ navAccount }}" style="background:none;border:none;font-size:13px;font-weight:500;color:#4C5A53;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="color:#2F4B3C"><span style="font-family:'IBM Plex Mono',monospace">←</span> Recipe book</button>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+            <button style="background:transparent;border:1px solid rgba(28,36,32,0.2);padding:8px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Save draft</button>
+            <button style="background:#2F4B3C;color:#F1F3EE;border:none;padding:8px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#25402F">Submit for review</button>
+          </div>
+        </div>
+
+        <div style="padding:30px 30px 48px;max-width:820px;margin:0 auto">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8C9A94;margin-bottom:6px">New recipe</div>
+          <h1 style="font-family:'Fraunces',serif;font-size:32px;font-weight:600;letter-spacing:-0.02em;margin:0 0 28px">Create a recipe</h1>
+
+          <!-- BASICS -->
+          <div style="margin-bottom:30px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#2F4B3C;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(28,36,32,0.1)">01 · Basics</div>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Title</label>
+            <input value="Chana Masala" style="width:100%;border:1px solid rgba(28,36,32,0.18);border-radius:9px;padding:11px 13px;font-size:15px;background:#FBFBF8;margin-bottom:16px;outline:none" style-focus="border-color:#2F4B3C">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div>
+                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Cuisine / region</label>
+                <input value="Indian" style="width:100%;border:1px solid rgba(28,36,32,0.18);border-radius:9px;padding:11px 13px;font-size:15px;background:#FBFBF8;outline:none" style-focus="border-color:#2F4B3C">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Short description</label>
+                <input value="Everyday chickpea curry" style="width:100%;border:1px solid rgba(28,36,32,0.18);border-radius:9px;padding:11px 13px;font-size:15px;background:#FBFBF8;outline:none" style-focus="border-color:#2F4B3C">
+              </div>
+            </div>
+          </div>
+
+          <!-- TIME & YIELD -->
+          <div style="margin-bottom:30px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#2F4B3C;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(28,36,32,0.1)">02 · Time &amp; yield</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+              <div>
+                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Total time (min)</label>
+                <input value="35" style="width:100%;border:1px solid rgba(28,36,32,0.18);border-radius:9px;padding:11px 13px;font-family:'IBM Plex Mono',monospace;font-size:15px;background:#FBFBF8;outline:none" style-focus="border-color:#2F4B3C">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Servings</label>
+                <input value="4" style="width:100%;border:1px solid rgba(28,36,32,0.18);border-radius:9px;padding:11px 13px;font-family:'IBM Plex Mono',monospace;font-size:15px;background:#FBFBF8;outline:none" style-focus="border-color:#2F4B3C">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Est. cost / serving</label>
+                <input value="1.90" style="width:100%;border:1px solid rgba(28,36,32,0.18);border-radius:9px;padding:11px 13px;font-family:'IBM Plex Mono',monospace;font-size:15px;background:#FBFBF8;outline:none" style-focus="border-color:#2F4B3C">
+              </div>
+            </div>
+          </div>
+
+          <!-- INGREDIENTS -->
+          <div style="margin-bottom:30px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#2F4B3C;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(28,36,32,0.1)">03 · Ingredients</div>
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <sc-for list="{{ createIngredients }}" as="i" hint-placeholder-count="3">
+                <div style="display:grid;grid-template-columns:70px 90px 1fr 120px 32px;gap:8px;align-items:center">
+                  <input value="{{ i.qty }}" placeholder="qty" style="border:1px solid rgba(28,36,32,0.18);border-radius:8px;padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:14px;background:#FBFBF8;outline:none;width:100%" style-focus="border-color:#2F4B3C">
+                  <input value="{{ i.unit }}" placeholder="unit" style="border:1px solid rgba(28,36,32,0.18);border-radius:8px;padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:14px;background:#FBFBF8;outline:none;width:100%" style-focus="border-color:#2F4B3C">
+                  <input value="{{ i.name }}" placeholder="ingredient" style="border:1px solid rgba(28,36,32,0.18);border-radius:8px;padding:9px 10px;font-size:14px;background:#FBFBF8;outline:none;width:100%" style-focus="border-color:#2F4B3C">
+                  <div style="border:1px solid rgba(28,36,32,0.18);border-radius:8px;padding:9px 10px;font-size:13px;background:#FBFBF8;color:#4C5A53;display:flex;justify-content:space-between;align-items:center;cursor:pointer">{{ i.cat }} <span style="color:#8C9A94">▾</span></div>
+                  <button style="border:1px solid rgba(28,36,32,0.14);background:none;border-radius:8px;height:36px;cursor:pointer;color:#8C9A94;font-size:15px" style-hover="color:#C1481E;border-color:#C1481E">×</button>
+                </div>
+              </sc-for>
+            </div>
+            <button style="margin-top:12px;background:none;border:1px dashed rgba(28,36,32,0.28);border-radius:9px;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;color:#2F4B3C" style-hover="border-color:#2F4B3C;background:rgba(47,75,60,0.03)">+ Add ingredient</button>
+          </div>
+
+          <!-- COOKWARE -->
+          <div style="margin-bottom:30px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#2F4B3C;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(28,36,32,0.1)">04 · Cookware</div>
+            <div style="display:flex;flex-wrap:wrap;gap:7px">
+              <span style="font-size:13px;padding:7px 12px;border-radius:16px;background:#2F4B3C;color:#F1F3EE">Dutch oven ×</span>
+              <span style="font-size:13px;padding:7px 12px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer" style-hover="border-color:#2F4B3C">+ Skillet</span>
+              <span style="font-size:13px;padding:7px 12px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer" style-hover="border-color:#2F4B3C">+ Pot</span>
+              <span style="font-size:13px;padding:7px 12px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer" style-hover="border-color:#2F4B3C">+ Sheet pan</span>
+            </div>
+          </div>
+
+          <!-- INSTRUCTIONS -->
+          <div style="margin-bottom:30px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#2F4B3C;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(28,36,32,0.1)">05 · Method</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#F1F3EE;background:#2F4B3C;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;margin-top:8px">1</span>
+                <textarea rows="2" style="flex:1;border:1px solid rgba(28,36,32,0.18);border-radius:9px;padding:10px 13px;font-size:14.5px;line-height:1.5;background:#FBFBF8;outline:none;resize:vertical;font-family:inherit" style-focus="border-color:#2F4B3C">Soften onion in oil over medium heat, 6–7 min.</textarea>
+              </div>
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#F1F3EE;background:#2F4B3C;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;margin-top:8px">2</span>
+                <textarea rows="2" style="flex:1;border:1px solid rgba(28,36,32,0.18);border-radius:9px;padding:10px 13px;font-size:14.5px;line-height:1.5;background:#FBFBF8;outline:none;resize:vertical;font-family:inherit" style-focus="border-color:#2F4B3C">Add garlic, ginger, and spices; toast 1 min until fragrant.</textarea>
+              </div>
+            </div>
+            <button style="margin-top:12px;background:none;border:1px dashed rgba(28,36,32,0.28);border-radius:9px;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;color:#2F4B3C" style-hover="border-color:#2F4B3C;background:rgba(47,75,60,0.03)">+ Add step</button>
+          </div>
+
+          <!-- DIETARY & SPICE -->
+          <div style="margin-bottom:30px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#2F4B3C;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(28,36,32,0.1)">06 · Dietary &amp; spice</div>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px">Dietary type</label>
+            <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px">
+              <span style="font-size:13px;padding:6px 12px;border-radius:16px;background:#2F4B3C;color:#F1F3EE">Vegan ✓</span>
+              <span style="font-size:13px;padding:6px 12px;border-radius:16px;background:#2F4B3C;color:#F1F3EE">Gluten-free ✓</span>
+              <span style="font-size:13px;padding:6px 12px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer">Vegetarian</span>
+              <span style="font-size:13px;padding:6px 12px;border-radius:16px;border:1px solid rgba(28,36,32,0.16);cursor:pointer">Pescatarian</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">
+              <div>
+                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:10px">Spice level</label>
+                <div style="display:flex;gap:8px">
+                  <span style="width:16px;height:16px;border-radius:50%;background:#C1481E"></span>
+                  <span style="width:16px;height:16px;border-radius:50%;background:#C1481E"></span>
+                  <span style="width:16px;height:16px;border-radius:50%;background:#C1481E"></span>
+                  <span style="width:16px;height:16px;border-radius:50%;border:1.5px solid #C7CEC7;cursor:pointer"></span>
+                </div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C9A94;margin-top:8px">3 / 4 — hot</div>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px">Allergens present</label>
+                <div style="display:flex;flex-wrap:wrap;gap:6px">
+                  <span style="font-size:12.5px;padding:5px 10px;border-radius:14px;border:1px solid rgba(193,72,30,0.35);color:#C1481E;cursor:pointer">+ Gluten</span>
+                  <span style="font-size:12.5px;padding:5px 10px;border-radius:14px;border:1px solid rgba(193,72,30,0.35);color:#C1481E;cursor:pointer">+ Soy</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C9A94;padding:6px 2px">none selected</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- NUTRITION (read-only) -->
+          <div style="margin-bottom:10px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#2F4B3C;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(28,36,32,0.1)">07 · Nutrition</div>
+            <div style="background:#EAEDE6;border:1px solid rgba(28,36,32,0.08);border-radius:12px;padding:18px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+                <span style="font-size:13.5px;font-weight:600">Auto-calculated from ingredients</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8C9A94;background:#F1F3EE;padding:2px 7px;border-radius:5px">read-only</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+                <sc-for list="{{ createNutrition }}" as="n" hint-placeholder-count="4">
+                  <div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600">{{ n.val }}</div>
+                    <div style="font-size:12px;color:#4C5A53">{{ n.label }} <span style="color:#8C9A94">{{ n.unit }}</span></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== SHOPPING LIST ===================== -->
+      <sc-if value="{{ isShopping }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display:flex;align-items:center;gap:20px;padding:14px 26px;border-bottom:1px solid rgba(28,36,32,0.09);background:#F1F3EE;position:sticky;top:0;z-index:10">
+          <button onClick="{{ navLanding }}" style="background:none;border:none;font-family:'Fraunces',serif;font-size:21px;font-weight:600;letter-spacing:-0.02em;cursor:pointer;padding:0">Mise</button>
+          <button onClick="{{ navBrowse }}" style="background:none;border:none;font-size:13px;font-weight:500;color:#4C5A53;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="color:#2F4B3C"><span style="font-family:'IBM Plex Mono',monospace">←</span> Back to recipes</button>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:16px">
+            <sc-if value="{{ signedIn }}"><button onClick="{{ navAccount }}" style="width:32px;height:32px;border-radius:50%;background:#2F4B3C;color:#F1F3EE;border:none;font-size:12px;font-weight:700;cursor:pointer">R</button></sc-if>
+          </div>
+        </div>
+
+        <div style="padding:30px 30px 48px;max-width:720px;margin:0 auto">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px">
+            <h1 style="font-family:'Fraunces',serif;font-size:32px;font-weight:600;letter-spacing:-0.02em;margin:0">Shopping list</h1>
+            <div style="display:flex;gap:10px">
+              <button style="background:transparent;border:1px solid rgba(28,36,32,0.2);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:#2F4B3C">Print</button>
+              <button style="background:transparent;border:1px solid rgba(28,36,32,0.2);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#C1481E" style-hover="border-color:#C1481E">Clear checked</button>
+            </div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#8C9A94;margin-bottom:24px">{{ checkedCount }} of {{ totalItems }} gathered · from 3 recipes</div>
+
+          <div style="display:flex;flex-direction:column;gap:26px">
+            <sc-for list="{{ shopping }}" as="g" hint-placeholder-count="4">
+              <div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#2F4B3C;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(28,36,32,0.12)">{{ g.cat }}</div>
+                <div style="display:flex;flex-direction:column">
+                  <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="3">
+                    <div style="display:flex;align-items:center;gap:13px;padding:11px 4px;border-bottom:1px solid rgba(28,36,32,0.06);cursor:pointer" onClick="{{ i.toggle }}">
+                      <sc-if value="{{ i.checked }}"><span style="width:20px;height:20px;border-radius:6px;background:#2F4B3C;display:flex;align-items:center;justify-content:center;color:#F1F3EE;font-size:12px;flex:none">✓</span></sc-if>
+                      <sc-if value="{{ i.unchecked }}"><span style="width:20px;height:20px;border-radius:6px;border:1.5px solid rgba(28,36,32,0.25);flex:none"></span></sc-if>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600;color:#2F4B3C;min-width:80px;flex:none">{{ i.qty }} {{ i.unit }}</span>
+                      <span style="flex:1;font-size:14.5px">{{ i.name }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8C9A94;background:#EAEDE6;padding:3px 9px;border-radius:12px;flex:none">{{ i.src }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== LOGIN / SIGN UP ===================== -->
+      <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ true }}">
+      <div style="min-height:640px;display:flex;flex-direction:column">
+        <div style="padding:20px 30px">
+          <button onClick="{{ navLanding }}" style="background:none;border:none;font-family:'Fraunces',serif;font-size:22px;font-weight:600;letter-spacing:-0.02em;cursor:pointer;padding:0">Mise</button>
+        </div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px 30px 60px">
+          <div style="width:100%;max-width:380px">
+            <h1 style="font-family:'Fraunces',serif;font-size:30px;font-weight:600;letter-spacing:-0.02em;margin:0 0 6px">Welcome back</h1>
+            <p style="font-size:14.5px;color:#4C5A53;margin:0 0 26px">Log in to save recipes and build lists.</p>
+
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Email</label>
+            <input placeholder="you@example.com" style="width:100%;border:1px solid rgba(28,36,32,0.18);border-radius:9px;padding:12px 13px;font-size:15px;background:#FBFBF8;margin-bottom:16px;outline:none" style-focus="border-color:#2F4B3C">
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Password</label>
+            <input type="password" value="········" style="width:100%;border:1px solid rgba(28,36,32,0.18);border-radius:9px;padding:12px 13px;font-size:15px;background:#FBFBF8;margin-bottom:8px;outline:none" style-focus="border-color:#2F4B3C">
+            <div style="text-align:right;margin-bottom:20px"><button style="background:none;border:none;font-size:12.5px;color:#2F4B3C;cursor:pointer;font-weight:500">Forgot password?</button></div>
+
+            <button onClick="{{ logInAndGo }}" style="width:100%;background:#2F4B3C;color:#F1F3EE;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:14px" style-hover="background:#25402F">Log in</button>
+
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><span style="flex:1;height:1px;background:rgba(28,36,32,0.12)"></span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C9A94">or</span><span style="flex:1;height:1px;background:rgba(28,36,32,0.12)"></span></div>
+
+            <button onClick="{{ logInAndGo }}" style="width:100%;background:transparent;border:1px solid rgba(28,36,32,0.2);padding:13px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:22px" style-hover="border-color:#2F4B3C">Create an account</button>
+
+            <p style="text-align:center;font-size:12.5px;color:#8C9A94;margin:0">No newsletters. No 2,000-word intros. Just recipes.</p>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!--SCREENS-->
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1332,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'landing',
+    signedIn: false,
+    viewport: 'desktop',
+    accountTab: 'library',
+    filtersOpen: false,
+    selectedId: 'salmon',
+    servings: 4,
+    saved: { salmon: true, cacio: true },
+    checked: { c2: true, c5: true },
+    detailNotesOpen: true,
+  };
+
+  RECIPES = [
+    { id:'salmon', title:'Gochujang-Glazed Salmon', cuisine:'Korean', time:24, servings:4, cal:520, spice:3, cost:4.60, diet:['Pescatarian'], allergens:['Fish','Soy'], cookware:['Sheet pan','Small saucepan'],
+      photo:'salmon fillet, glazed',
+      nutrition:[['Calories','520','kcal'],['Protein','38','g'],['Carbs','22','g'],['Fat','30','g'],['Sodium','680','mg'],['Fiber','2','g']],
+      ingredients:[
+        {cat:'Protein',qty:4,unit:'fillet',name:'salmon (6 oz each)'},
+        {cat:'Pantry',qty:2,unit:'tbsp',name:'gochujang'},
+        {cat:'Pantry',qty:1,unit:'tbsp',name:'soy sauce'},
+        {cat:'Pantry',qty:1,unit:'tbsp',name:'honey'},
+        {cat:'Pantry',qty:2,unit:'tsp',name:'toasted sesame oil'},
+        {cat:'Produce',qty:2,unit:'clove',name:'garlic, grated'},
+        {cat:'Produce',qty:3,unit:'stalk',name:'scallion, sliced'},
+        {cat:'Produce',qty:1,unit:'tsp',name:'toasted sesame seeds'},
+      ],
+      steps:[
+        'Heat oven to 425°F. Line a sheet pan.',
+        'Whisk gochujang, soy, honey, sesame oil, and garlic into a glaze.',
+        'Pat salmon dry, set on the pan, and brush thickly with glaze.',
+        'Roast 11–13 min until the glaze caramelizes and fish flakes.',
+        'Top with scallion and sesame; serve over rice.',
+      ],
+      notes:'Broil the last 90 seconds for a darker, stickier crust. Halibut works too.' },
+
+    { id:'chana', title:'Chana Masala', cuisine:'Indian', time:35, servings:4, cal:390, spice:3, cost:1.90, diet:['Vegan','Gluten-free'], allergens:[], cookware:['Dutch oven'],
+      photo:'chickpea curry, bowl',
+      nutrition:[['Calories','390','kcal'],['Protein','16','g'],['Carbs','58','g'],['Fat','11','g'],['Sodium','540','mg'],['Fiber','14','g']],
+      ingredients:[
+        {cat:'Pantry',qty:2,unit:'can',name:'chickpeas, drained'},
+        {cat:'Pantry',qty:1,unit:'can',name:'crushed tomatoes'},
+        {cat:'Produce',qty:1,unit:'',name:'yellow onion, diced'},
+        {cat:'Produce',qty:3,unit:'clove',name:'garlic, minced'},
+        {cat:'Produce',qty:1,unit:'tbsp',name:'ginger, grated'},
+        {cat:'Spices',qty:2,unit:'tsp',name:'garam masala'},
+        {cat:'Spices',qty:1,unit:'tsp',name:'ground cumin'},
+        {cat:'Spices',qty:0.5,unit:'tsp',name:'cayenne'},
+      ],
+      steps:[
+        'Soften onion in oil over medium heat, 6–7 min.',
+        'Add garlic, ginger, and spices; toast 1 min until fragrant.',
+        'Stir in tomatoes and chickpeas; simmer 18–20 min.',
+        'Mash a few chickpeas to thicken; season and finish with lemon.',
+      ],
+      notes:'Better the next day. Serve with rice or warm flatbread.' },
+
+    { id:'cacio', title:'Cacio e Pepe', cuisine:'Italian', time:18, servings:2, cal:640, spice:1, cost:2.10, diet:['Vegetarian'], allergens:['Gluten','Dairy'], cookware:['Pot','Skillet'],
+      photo:'pasta, twirled',
+      nutrition:[['Calories','640','kcal'],['Protein','24','g'],['Carbs','82','g'],['Fat','24','g'],['Sodium','590','mg'],['Fiber','3','g']],
+      ingredients:[
+        {cat:'Pantry',qty:200,unit:'g',name:'tonnarelli or spaghetti'},
+        {cat:'Dairy',qty:80,unit:'g',name:'Pecorino Romano, grated'},
+        {cat:'Spices',qty:2,unit:'tsp',name:'black pepper, coarse'},
+      ],
+      steps:[
+        'Boil pasta in well-salted water until just shy of al dente.',
+        'Toast cracked pepper in a dry skillet, then add a ladle of pasta water.',
+        'Add pasta and toss; off heat, work in pecorino with more water.',
+        'Toss hard until a glossy sauce coats every strand.',
+      ],
+      notes:'Keep the heat low when adding cheese or it will clump. Save extra pasta water.' },
+
+    { id:'shakshuka', title:'Shakshuka', cuisine:'North African', time:30, servings:3, cal:340, spice:2, cost:2.40, diet:['Vegetarian','Gluten-free'], allergens:['Egg'], cookware:['Skillet'],
+      photo:'eggs in tomato, skillet',
+      nutrition:[['Calories','340','kcal'],['Protein','18','g'],['Carbs','24','g'],['Fat','20','g'],['Sodium','620','mg'],['Fiber','6','g']],
+      ingredients:[
+        {cat:'Protein',qty:5,unit:'',name:'eggs'},
+        {cat:'Pantry',qty:1,unit:'can',name:'whole tomatoes'},
+        {cat:'Produce',qty:1,unit:'',name:'red bell pepper, sliced'},
+        {cat:'Produce',qty:1,unit:'',name:'onion, sliced'},
+        {cat:'Spices',qty:1,unit:'tsp',name:'smoked paprika'},
+        {cat:'Spices',qty:1,unit:'tsp',name:'ground cumin'},
+      ],
+      steps:[
+        'Soften onion and pepper in oil until slumped, 8 min.',
+        'Add spices, then tomatoes; simmer to a thick sauce, 10 min.',
+        'Make wells and crack in eggs; cover and cook to set, 6–8 min.',
+        'Finish with herbs; scoop straight from the pan with bread.',
+      ],
+      notes:'Whites set before yolks — pull it early for runny centers.' },
+
+    { id:'ramen', title:'Miso Mushroom Ramen', cuisine:'Japanese', time:28, servings:2, cal:560, spice:2, cost:3.50, diet:['Vegetarian'], allergens:['Soy','Gluten'], cookware:['Pot'],
+      photo:'ramen bowl, broth',
+      nutrition:[['Calories','560','kcal'],['Protein','22','g'],['Carbs','74','g'],['Fat','20','g'],['Sodium','980','mg'],['Fiber','5','g']],
+      ingredients:[
+        {cat:'Pantry',qty:2,unit:'portion',name:'fresh ramen noodles'},
+        {cat:'Pantry',qty:3,unit:'tbsp',name:'white miso'},
+        {cat:'Produce',qty:200,unit:'g',name:'mixed mushrooms'},
+        {cat:'Produce',qty:2,unit:'clove',name:'garlic'},
+        {cat:'Pantry',qty:1,unit:'tbsp',name:'soy sauce'},
+        {cat:'Produce',qty:2,unit:'',name:'soft-boiled eggs (optional)'},
+      ],
+      steps:[
+        'Sear mushrooms hard until browned; set aside.',
+        'Bloom garlic in oil, add 4 cups water and miso; keep below a boil.',
+        'Cook noodles separately, then divide into bowls.',
+        'Ladle broth over, top with mushrooms, egg, and scallion.',
+      ],
+      notes:'Never boil miso broth — it dulls the flavor. Stir it in off the heat.' },
+
+    { id:'harissa', title:'Harissa Roast Cauliflower', cuisine:'Tunisian', time:40, servings:4, cal:300, spice:3, cost:2.20, diet:['Vegan','Gluten-free'], allergens:[], cookware:['Sheet pan'],
+      photo:'roasted cauliflower',
+      nutrition:[['Calories','300','kcal'],['Protein','9','g'],['Carbs','28','g'],['Fat','18','g'],['Sodium','470','mg'],['Fiber','9','g']],
+      ingredients:[
+        {cat:'Produce',qty:1,unit:'head',name:'cauliflower, in florets'},
+        {cat:'Pantry',qty:2,unit:'tbsp',name:'harissa paste'},
+        {cat:'Pantry',qty:3,unit:'tbsp',name:'olive oil'},
+        {cat:'Pantry',qty:1,unit:'can',name:'chickpeas, drained'},
+        {cat:'Produce',qty:1,unit:'',name:'lemon'},
+        {cat:'Spices',qty:1,unit:'tsp',name:'ground coriander'},
+      ],
+      steps:[
+        'Heat oven to 450°F.',
+        'Toss cauliflower and chickpeas with harissa, oil, and coriander.',
+        'Roast 28–32 min, turning once, until charred at the edges.',
+        'Finish with lemon and herbs; great over yogurt or grains.',
+      ],
+      notes:'Crowding steams instead of roasting — use two pans if needed.' },
+  ];
+
+  FILTER_GROUPS = [
+    { label:'Cuisine', options:[['Korean',false],['Indian',true],['Italian',false],['Japanese',false],['North African',false],['Tunisian',false]] },
+    { label:'Dietary type', options:[['Vegan',true],['Vegetarian',false],['Pescatarian',false],['Gluten-free',false]] },
+    { label:'Cookware', options:[['Sheet pan',false],['Skillet',false],['Dutch oven',false],['Pot',false],['Saucepan',false]] },
+  ];
+
+  ALLERGENS = ['Gluten','Dairy','Egg','Fish','Soy','Nuts'];
+
+  spiceDots(n){ const a=[]; for(let i=0;i<4;i++) a.push({on:i<n, off:i>=n}); return a; }
+  fmtQty(q){ if(q===0||q==null) return ''; const r=Math.round(q*100)/100; return (r%1===0)? String(r) : String(r); }
+
+  go(s){ this.setState({ screen:s, filtersOpen:false }); if(typeof window!=='undefined') window.scrollTo({top:0,behavior:'instant'}); }
+  openRecipe(id){ const r=this.RECIPES.find(x=>x.id===id); this.setState({ screen:'detail', selectedId:id, servings:r?r.servings:4, detailNotesOpen:true }); if(typeof window!=='undefined') window.scrollTo({top:0}); }
+  toggleFav(id){ this.setState(s=>({ saved:{...s.saved,[id]:!s.saved[id]} })); }
+  toggleCheck(id){ this.setState(s=>({ checked:{...s.checked,[id]:!s.checked[id]} })); }
+
+  cardOf(r){
+    return {
+      id:r.id, title:r.title, cuisine:r.cuisine,
+      time:String(r.time), servings:String(r.servings), cal:String(r.cal), cost:r.cost.toFixed(2),
+      spiceDots:this.spiceDots(r.spice),
+      saved:!!this.state.saved[r.id], notSaved:!this.state.saved[r.id],
+      photo:r.photo, diet:r.diet.join(' · '),
+      hasAllergens:r.allergens.length>0, allergens:r.allergens.join(', '),
+      open:()=>this.openRecipe(r.id), fav:()=>this.toggleFav(r.id),
+    };
+  }
+
+  renderVals(){
+    const s=this.state;
+    const screen=s.screen;
+    const cards=this.RECIPES.map(r=>this.cardOf(r));
+    const sel=this.RECIPES.find(r=>r.id===s.selectedId)||this.RECIPES[0];
+    const mult = sel.servings? (s.servings/sel.servings) : 1;
+    const selIngredients = sel.ingredients.map(i=>({
+      qty: i.qty? this.fmtQty(i.qty*mult):'', unit:i.unit, name:i.name, cat:i.cat,
+    }));
+
+    const savedCards = cards.filter(c=>c.saved);
+
+    const bookRecipes = [
+      { title:'Weeknight Green Curry', time:'30', servings:'4', status:'published' },
+      { title:"Dad's Sunday Ragù", time:'180', servings:'8', status:'published' },
+      { title:'Charred Cabbage, Anchovy Butter', time:'25', servings:'2', status:'pending' },
+    ];
+
+    const shopping = [
+      { cat:'Produce', items:[
+        {id:'c1', qty:'3', unit:'stalk', name:'scallion', src:'Salmon'},
+        {id:'c2', qty:'2', unit:'clove', name:'garlic', src:'Salmon'},
+        {id:'c3', qty:'1', unit:'', name:'yellow onion', src:'Chana Masala'},
+        {id:'c4', qty:'1', unit:'', name:'red bell pepper', src:'Shakshuka'},
+      ]},
+      { cat:'Protein', items:[
+        {id:'c5', qty:'4', unit:'fillet', name:'salmon (6 oz)', src:'Salmon'},
+        {id:'c6', qty:'5', unit:'', name:'eggs', src:'Shakshuka'},
+      ]},
+      { cat:'Pantry', items:[
+        {id:'c7', qty:'2', unit:'tbsp', name:'gochujang', src:'Salmon'},
+        {id:'c8', qty:'2', unit:'can', name:'chickpeas', src:'Chana Masala'},
+        {id:'c9', qty:'1', unit:'can', name:'crushed tomatoes', src:'Chana Masala'},
+      ]},
+      { cat:'Spices', items:[
+        {id:'c10', qty:'2', unit:'tsp', name:'garam masala', src:'Chana Masala'},
+        {id:'c11', qty:'1', unit:'tsp', name:'smoked paprika', src:'Shakshuka'},
+      ]},
+    ].map(g=>({ cat:g.cat, items:g.items.map(it=>({...it, checked:!!s.checked[it.id], unchecked:!s.checked[it.id], toggle:()=>this.toggleCheck(it.id)})) }));
+
+    const totalItems = shopping.reduce((n,g)=>n+g.items.length,0);
+    const checkedCount = shopping.reduce((n,g)=>n+g.items.filter(i=>i.checked).length,0);
+
+    const navItems = [
+      ['landing','Landing'],['browse','Search'],['detail','Recipe'],['account','Account'],['create','Create'],['shopping','Shopping'],['auth','Login'],
+    ].map(([k,l])=>({ label:l, active:screen===k, on:()=>this.go(k) }));
+
+    return {
+      // toolbar
+      navItems,
+      setDesktop:()=>this.setState({viewport:'desktop'}),
+      setMobile:()=>this.setState({viewport:'mobile'}),
+      viewIsMobile:s.viewport==='mobile', viewIsDesktop:s.viewport==='desktop',
+      frameWidth: s.viewport==='mobile' ? '400px' : '1280px',
+      heroCols: s.viewport==='mobile' ? '1fr' : '1.1fr 0.9fr',
+      toggleSignedIn:()=>this.setState(st=>({signedIn:!st.signedIn})),
+      signLabel: s.signedIn ? 'Signed in ●' : 'Signed out ○',
+      signedIn:s.signedIn, signedOut:!s.signedIn,
+
+      // screen flags
+      isLanding:screen==='landing', isBrowse:screen==='browse', isDetail:screen==='detail',
+      isAccount:screen==='account', isCreate:screen==='create', isShopping:screen==='shopping', isAuth:screen==='auth',
+
+      // nav handlers
+      navLanding:()=>this.go('landing'), navBrowse:()=>this.go('browse'), navDetail:()=>this.go('detail'),
+      navAccount:()=>this.go('account'), navCreate:()=>this.go('create'), navShopping:()=>this.go('shopping'), navAuth:()=>this.go('auth'),
+
+      // landing
+      miseTiles:[{label:'mise'},{label:'prep'},{label:'weigh'},{label:'chop'},{label:'measure'},{label:'season'},{label:'plate'},{label:'time'},{label:'cook'}],
+      features:[
+        {title:'Filter by what matters', desc:'Ingredients, nutrition, cookware, time, servings, cuisine, allergens, diet, spice, and cost — all at once.', iconRadius:'2px'},
+        {title:'Read the spec, not a story', desc:'Every card shows time, servings, calories, spice, and cost up front in a compact strip.', iconRadius:'50%'},
+        {title:'Shopping list in seconds', desc:'Build a list grouped by aisle, with the source recipe tagged on every item.', iconRadius:'2px'},
+        {title:'Your private recipe book', desc:'Save favorites and keep your own recipes — publish for review when they are ready.', iconRadius:'50%'},
+      ],
+
+      // browse
+      cards,
+      resultCount:String(cards.length),
+      filterGroups:this.FILTER_GROUPS.map(g=>({ label:g.label, options:g.options.map(([n,sel])=>({name:n, on:sel, off:!sel})) })),
+      allergens:this.ALLERGENS.map(a=>({name:a})),
+      filtersOpen:s.filtersOpen,
+      openFilters:()=>this.setState({filtersOpen:true}),
+      closeFilters:()=>this.setState({filtersOpen:false}),
+      railAsSidebar: s.viewport!=='mobile',
+      gridCols: s.viewport==='mobile' ? 'repeat(auto-fill,minmax(150px,1fr))' : 'repeat(auto-fill,minmax(232px,1fr))',
+      contentCols: s.viewport==='mobile' ? '1fr' : '248px 1fr',
+
+      // detail
+      sel:{
+        title:sel.title, cuisine:sel.cuisine, photo:sel.photo,
+        time:String(sel.time), cal:String(sel.cal), cost:sel.cost.toFixed(2),
+        spiceDots:this.spiceDots(sel.spice),
+        diet:sel.diet.join(' · '), hasAllergens:sel.allergens.length>0, allergens:sel.allergens.join(', '),
+        cookware:sel.cookware, nutrition:sel.nutrition.map(n=>({label:n[0],val:n[1],unit:n[2]})),
+        steps:sel.steps.map((t,i)=>({n:String(i+1), text:t})), notes:sel.notes,
+        saved:!!s.saved[sel.id], notSaved:!s.saved[sel.id], fav:()=>this.toggleFav(sel.id),
+      },
+      selIngredients,
+      servings:String(s.servings),
+      incServ:()=>this.setState(st=>({servings:Math.min(12,st.servings+1)})),
+      decServ:()=>this.setState(st=>({servings:Math.max(1,st.servings-1)})),
+      detailCols: s.viewport==='mobile' ? '1fr' : '0.9fr 1fr 1.2fr 0.85fr',
+      detailNotesOpen:s.detailNotesOpen, detailNotesClosed:!s.detailNotesOpen,
+      toggleNotes:()=>this.setState(st=>({detailNotesOpen:!st.detailNotesOpen})),
+
+      // account
+      accountTab:s.accountTab,
+      tabLibrary:s.accountTab==='library', tabBook:s.accountTab==='book',
+      setLibrary:()=>this.setState({accountTab:'library'}), setBook:()=>this.setState({accountTab:'book'}),
+      savedCards, savedCount:String(savedCards.length),
+      bookRecipes:bookRecipes.map(b=>({...b, isPending:b.status==='pending', isPublished:b.status==='published', open:()=>this.openRecipe('salmon')})),
+      signOut:()=>this.setState({signedIn:false, screen:'landing'}),
+      logInAndGo:()=>this.setState({signedIn:true, screen:'browse'}),
+
+      // shopping
+      shopping, totalItems:String(totalItems), checkedCount:String(checkedCount),
+
+      // create
+      createIngredients:[
+        {qty:'2', unit:'can', name:'chickpeas, drained', cat:'Pantry'},
+        {qty:'1', unit:'can', name:'crushed tomatoes', cat:'Pantry'},
+        {qty:'1', unit:'', name:'yellow onion', cat:'Produce'},
+      ],
+      createNutrition:[['Calories','390','kcal'],['Protein','16','g'],['Carbs','58','g'],['Fat','11','g']].map(n=>({label:n[0],val:n[1],unit:n[2]})),
+    };
+  }
+}
+</script>
+</body>
+</html>
