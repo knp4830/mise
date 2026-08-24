@@ -4,6 +4,45 @@
 > **How to use it:** work top to bottom. One milestone = one branch = one pull request = one Claude Code session. Check the box only when the Definition of Done is actually true.
 > **Never delete a checked box.** This file is the project's memory.
 
+## How to read this document
+
+**Milestone IDs — `M3.5`**
+
+`M` = milestone, then the phase, then the position within that phase. `M3.5` is Phase 3, item 5. `M1.5.3` is Phase **1.5** (catalog fill, inserted between Phases 1 and 2), item 3.
+
+It's an address, so the plan, the GitHub issues, and your branch names all point at the same thing:
+
+```
+docs/BUILD-PLAN.md   M3.5 — Search
+GitHub issue         "M3.5 Postgres full-text search"
+Branch               feat/m3-5-search
+Commit               feat(search): weighted tsvector with trgm fallback
+```
+
+**Priority — `P0` through `P3`**
+
+Standard industry convention. Counts *down* in importance — P0 outranks P1.
+
+| Label | Means | Test |
+|---|---|---|
+| **P0** | Blocks launch | Ship without it and the product is broken or pointless |
+| **P1** | Needed for a good launch | You'd ship without it, reluctantly |
+| **P2** | Nice to have | Improves things, nothing breaks without it |
+| **P3** | Post-launch | Real work, wrong time |
+
+These are labels on the GitHub issues, so `gh issue list --label P0` answers "what's actually blocking launch."
+
+**Other shorthand used here**
+
+| Term | Means |
+|---|---|
+| **DoD** | Definition of Done — the observable condition that makes a milestone finished. Not "I wrote the code," but "this specific thing works when I try it." |
+| **MVP** | Minimum Viable Product — the smallest version that proves the core idea works |
+| **RLS** | Row Level Security — Postgres deciding, at the database level, which rows a given user may see or change |
+| **RPC** | Remote Procedure Call — here, a Postgres function called from the app via `supabase.rpc()` |
+| **WIP limit** | Work In Progress limit — the cap of one item in the board's `In progress` column |
+| **Tier 1 / 2 / 3** | The three recipe-sourcing strategies in Phase 1.5, ordered by legal risk |
+
 ---
 
 ## The one-liner
@@ -12,27 +51,45 @@
 
 *(Mise en place — everything in its place, prepped before you start.)*
 
-**This is a pantry-matching tool, not a recipe search engine.** That distinction drives nearly every decision below. Search assumes you know the answer and want to find it. Mise assumes you don't.
+## Two doors, one catalog
+
+People show up in one of two states, and Mise has to serve both:
+
+| | **Door 1 — "I don't know what to make"** | **Door 2 — "I want cacio e pepe"** |
+|---|---|---|
+| They have | Ingredients, no plan | A dish in mind |
+| They use | The pantry matcher | Search |
+| Query shape | Set coverage — rank by what's missing | Text match — find the thing |
+| Why it matters | **The differentiator.** Nobody else does this well | **Table stakes.** A recipe app that can't find a named recipe is broken |
+
+**The pantry matcher is what makes Mise worth choosing. Search is what makes it worth keeping.** Both are P0. They share the same catalog, the same filters, and the same recipe pages — they're two entrances to one building, not two products.
+
+The one place the distinction bites is the **landing page**: it leads with the pantry input, because that's the door nobody else offers, with search right beside it rather than buried. Someone who knows they want shakshuka can type it immediately; someone staring at a fridge gets the thing they actually needed.
 
 ## The core user flow (this is the MVP; everything else is a future feature)
 
-1. Land on the site → **add the ingredients you have** (fast autocomplete, no account required)
-2. See matches ranked by coverage — *"you have 7 of 8"* beats *"you have 3 of 11"*
-3. Narrow further with filters (time, macros, cookware, spice level, diet, allergens)
-4. Open a recipe → ingredients + amounts + steps, nothing else
-5. Favorite it → it's in your library next time
-6. Write your own recipe → it saves to your account
+**Entry — either door:**
 
-If those six work end to end, the MVP is done. Ship it.
+1a. **Add the ingredients you have** → matches ranked by coverage, *"you have 7 of 8"* beating *"you have 3 of 11"*
+1b. **Or search a dish, ingredient, or cuisine** → results ranked by relevance
 
-**Step 1 is the product.** If the pantry input is slow, or the matching is dumb, nothing downstream matters. Budget accordingly: this deserves more of your time than the landing page, the account system, and recipe creation combined.
+**Then, identically from either door:**
+
+2. Narrow with filters (time, macros, cookware, spice level, diet, allergens)
+3. Open a recipe → ingredients + amounts + steps, nothing else
+4. Favorite it → it's in your library next time
+5. Write your own recipe → it saves to your account
+
+If both doors and steps 2–5 work end to end, the MVP is done. Ship it.
+
+**The pantry matcher deserves the most iteration** — it's novel, so there's no established pattern to copy and the ranking quality is a judgment call only you can make. Search is a well-understood problem with a known-good solution (Postgres full-text). Budget your *thinking* accordingly; both still ship in Phase 3.
 
 ## Scale target
 
 **500+ recipes in the catalog at launch.** This is a stated requirement, not an aspiration, and it changes several decisions:
 
 - **Browse must paginate or infinite-scroll.** Rendering 500 cards at once is a slow page and a bad phone experience. Page size 24, cursor-based.
-- **Browsing stops being a viable entry point.** Nobody scrolls 21 pages of cards. At this size the pantry matcher isn't a nice feature, it's the only usable way in — which is exactly what you already concluded from the product side.
+- **Browsing stops being a viable entry point.** Nobody scrolls 21 pages of cards. At this size both real doors — the pantry matcher and search — become mandatory, not optional. Browse becomes a place you land after narrowing, not a way in.
 - **Indexes are not a Phase 6 optimization.** They go into the initial migration. An unindexed filter query over 500 rows joined to ~4,000 ingredient rows is already slow enough to feel.
 - **Static generation needs a strategy.** 500 prerendered pages at build time is fine (~2 min builds). 5,000 is not — at that point we switch to on-demand generation with caching. Building it right the first time means this is a config change later, not a rewrite.
 - **Content sourcing becomes the critical path.** 500 hand-authored recipes is roughly 150+ hours of data entry. See `Phase 1.5`.
@@ -554,13 +611,37 @@ Explain the "exclude recipes containing any of these allergens" case — it's a 
 correlated subquery and it's the one people get wrong.
 ```
 
-### ☐ M3.5 — Search (secondary, but still needed)
-Postgres full-text over title + canonical ingredient names, GIN index on a generated `tsvector`.
+### ☐ M3.5 — Search **(P0 — Door 2)**
 
-Demoted from P0 to **P1** — you were right that search isn't the entry point. But keep it: once someone has cooked from Mise a few times they *will* come back looking for "that shakshuka," and not finding it is a bad experience. It's a returning-user feature, not an acquisition feature.
+A recipe app that can't find a recipe by name is broken. This ships with the MVP.
+
+**Claude Code prompt:**
+```
+Build search for Mise using Postgres full-text search.
+- A generated tsvector column on recipes combining title (weight A), canonical
+  ingredient names (weight B), and cuisine + diet tags (weight C), with a GIN index
+- Rank with ts_rank so title matches beat ingredient matches
+- Handle the realistic failure cases: typos ("shakshuka" vs "shakshouka"), plurals,
+  and partial words. Use pg_trgm similarity as a fallback when full-text returns
+  nothing, and tell me the tradeoff you're making
+- Search state in URL search params (/recipes?q=...), sharable and back-button safe
+- Search composes with the SAME filters as the pantry matcher — searching "pasta"
+  then filtering to under 20 minutes must work
+- Results reuse the same RecipeCard as everywhere else
+
+Explain what a tsvector is, what the weights do, why a GIN index is the right index
+type here, and at what catalog size Postgres full-text would stop being enough.
+```
+
+**DoD:** searching "cacio", "shakshuka", "chickpea", and "korean" each return sensible ranked results in under 100ms. A typo still finds the dish.
 
 ### ☐ M3.6 — Landing page
-Build it last. For Mise the landing page **is** the pantry input — hero copy, then the ingredient box, immediately, above the fold. No search bar. Someone who lands here doesn't know what they want; asking them to type a dish name is asking the one question they can't answer.
+
+Build it last — it's marketing for the thing, and you can't market a thing that doesn't exist yet.
+
+**Both doors, above the fold.** The pantry input leads, because that's the entrance nobody else offers and it's what someone with no plan actually needs. The search box sits right beside it, not buried in a nav menu — someone who arrives knowing they want shakshuka should be able to type it in the first second.
+
+Don't make the two feel like separate modes with a toggle. They're two inputs to the same catalog, and the results page is the same page either way.
 
 ### ☐ M3.7 — Programmatic ingredient landing pages **(the growth engine)**
 
@@ -582,7 +663,12 @@ Explain generateStaticParams, ISR, and how to keep build times sane if this grow
 to thousands of pages.
 ```
 
-**DoD for Phase 3:** a stranger lands on the site, types four things from their fridge, gets recipes ranked by what they're missing, opens one, and cooks it. Logged out. On a phone. Under 200ms per query.
+**DoD for Phase 3 — both doors work:**
+
+1. A stranger types four things from their fridge, gets recipes ranked by what they're missing, opens one, and cooks it.
+2. A stranger types "shakshuka", finds it, opens it, and cooks it.
+
+Logged out. On a phone. Under 200ms per query.
 
 ---
 

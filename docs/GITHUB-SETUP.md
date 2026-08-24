@@ -220,9 +220,9 @@ new "M3.3 PANTRY MATCHER — match_recipes RPC + ingredient autocomplete" "$P3" 
     "THE product. Set-coverage ranking in Postgres. Everything else is table stakes. See docs/BUILD-PLAN.md M3.3."
 new "M3.4 Conventional filters layered into match_recipes" "$P3" "type:feature,area:search,P0" \
     "Time, macros, cookware, spice, diet, allergens. Same RPC, not a second query."
-new "M3.5 Postgres full-text search" "$P3" "type:feature,area:search,P1" \
-    "Returning-user feature, not acquisition. Demoted from P0."
-new "M3.6 Landing page (pantry input above the fold, no search bar)" "$P3" "type:feature,area:ui,P1" "Build last."
+new "M3.5 Postgres full-text search" "$P3" "type:feature,area:search,P0" \
+    "Door 2. A recipe app that cannot find a named recipe is broken. tsvector + GIN + trgm fallback."
+new "M3.6 Landing page (pantry input leads, search beside it)" "$P3" "type:feature,area:ui,P1" "Build last."
 new "M3.7 Programmatic /what-can-i-make/[combo] SEO pages" "$P3" "type:feature,P1" \
     "The growth engine. ~300 static pages for common ingredient combos."
 

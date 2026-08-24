@@ -327,11 +327,19 @@ The constraint produced a better answer than the original plan. That happens mor
 
 **Milestone:** Pre-build · **Date:** 2026-08-24
 
-### The reframe
+### The reframe — and a correction to it
 
-You clarified something that changes the product's center of gravity: **Mise is not a recipe search engine.** Nobody arrives knowing they want shakshuka. They arrive with chicken, half an onion, and no plan. The job is *"what can I make with this?"*
+You clarified that Mise's center of gravity is *"what can I make with this?"* — people arriving with chicken, half an onion, and no plan.
 
-That's a different product from what the first draft of the plan described, and it has consequences well beyond moving a search box.
+**I then over-corrected, and you caught it.** From "the landing page doesn't need a food search box" I concluded search was a secondary, returning-user feature and demoted it to P1. Wrong. You meant search shouldn't be the *only* door, not that it should be weak — and a recipe app that can't find a named recipe is simply broken.
+
+The corrected framing, now in the build plan: **two doors, one catalog.** The pantry matcher is what makes Mise worth choosing; search is what makes it worth keeping. Both P0.
+
+The debugging lesson generalizes past this project: **when someone tells you what they don't need, that's a statement about one thing, not a license to downgrade a whole category.** "No search box on the landing page" is a layout decision. I turned it into a priority decision about a core feature. When a constraint arrives, check how far its blast radius actually extends before you let it move things.
+
+### What the pantry door changes technically
+
+Even with search restored, Door 1 is architecturally the interesting one.
 
 **Search and pantry matching are opposite operations.** Search takes a known answer and finds the document. Pantry matching takes a *set* of things you have and ranks documents by how well they're covered by it. In SQL, search is text matching against an index. Pantry matching is set containment with a ranking function:
 

@@ -2,9 +2,14 @@
 
 ## What this is
 
-**Mise tells you what to cook with what you already have.** The user arrives with chicken, half an onion, and no plan — not with a dish in mind. They enter their pantry, and Mise ranks recipes by how little they're missing.
+**Mise tells you what to cook — whether or not you already know.** Every recipe is ingredients, amounts, and numbered steps. No headnotes, no anecdotes, no essay.
 
-This is a **pantry-matching tool, not a recipe search engine.** That distinction drives most decisions in this codebase. Every recipe is ingredients, amounts, and numbered steps. No headnotes, no anecdotes, no essay.
+**Two doors into one catalog, both P0:**
+
+1. **Pantry matcher** — the user enters what's in their kitchen; Mise ranks recipes by how little they're missing. This is the differentiator.
+2. **Search** — the user knows they want cacio e pepe and types it. This is table stakes; a recipe app that can't find a named recipe is broken.
+
+They share the same catalog, the same filters, and the same recipe pages. Never build a feature that works for one door and not the other.
 
 Target catalog: 500+ recipes (aiming for ~1,500).
 
