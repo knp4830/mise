@@ -26,7 +26,28 @@ Target catalog: 500+ recipes (aiming for ~1,500).
 ## Folder structure
 
 <!-- Fill this in at M0.3 with the real output of: tree -L 3 -I node_modules -->
-_Not yet scaffolded. Replace this line after M0.3._
+```
+mise/
+├── src/
+│   └── app/              # App Router — folders are URL segments
+│       ├── layout.tsx    # root layout (renders <html>/<body>)
+│       ├── page.tsx      # /
+│       ├── globals.css   # Tailwind v4 + all colour variables
+│       └── favicon.ico
+├── public/               # served verbatim at site root (/file.svg)
+├── docs/                 # BUILD-PLAN, LEARNING-LOG, GITHUB-SETUP, TERMINAL-LOG
+├── design/               # Mise.dc.html — the visual spec + its runtime
+├── scripts/              # repo tooling (seed-issues.sh)
+├── eslint.config.mjs
+├── next.config.ts
+├── postcss.config.mjs
+├── pnpm-workspace.yaml   # pnpm 11 `allowBuilds` lives here, not package.json
+├── pnpm-lock.yaml
+└── tsconfig.json         # @/* → src/*
+```
+
+Not yet created, but committed to by the conventions below: `src/lib/queries/`,
+`src/components/`, `supabase/migrations/`.
 
 ## Conventions
 
@@ -88,4 +109,8 @@ If the DoD can't be met — a dependency is missing, a decision is needed from m
 
 ## Current status
 
-Phase 0 — Foundations. Next up: **M0.3, scaffold Next.js and deploy a blank app to Vercel.**
+Phase 0 — Foundations.
+
+M0.3 is done — the app is live at **https://mise-mise14.vercel.app** and pushes to `main` redeploy automatically.
+
+Next up: **M0.4, project documentation in the repo.** (Largely already true — `CLAUDE.md` exists and the four docs are in `docs/`. Verify against the DoD rather than assuming.) Then **M0.5, branch protection on `main`.**
