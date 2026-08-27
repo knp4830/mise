@@ -278,6 +278,13 @@ history | grep mkdir     # find a command you ran before but can't remember
 | 2026-08-27 | `gh api repos/OWNER/REPO/deployments --jq '.[0].id'` | Find the Vercel deploy from the terminal | Vercel writes a *deployment* record back to GitHub. `--jq` filters the JSON inline so you don't need to pipe to `jq` |
 | 2026-08-27 | `gh api repos/OWNER/REPO/deployments/ID/statuses --jq '.[].environment_url'` | Get the live URL | The status record carries the deployed URL and whether the build succeeded |
 | 2026-08-27 | `curl -s -o page.html -w "%{http_code}" URL` then `grep "<title>" page.html` | Prove the site is really public | **Caught a real bug.** Status was 200 but the body was `<title>Login – Vercel</title>` — Vercel Authentication was on. Always check the body, not just the code |
+| 2026-08-27 | `gh api repos/OWNER/REPO/branches/main/protection` | Check branch protection | **403.** GitHub Free doesn't offer branch protection on *private* repos. Rulesets return the same 403 — same limitation, newer API |
+| 2026-08-27 | `git rev-list --all \| while read c; do git grep -InEi "PATTERN" $c; done` | Scan every commit for secrets before going public | Going public exposes *all history*, not just the current files. `git grep` takes a commit argument, so this searches each one in turn |
+| 2026-08-27 | `gh repo edit OWNER/REPO --visibility public --accept-visibility-change-consequences` | Make the repo public | The long flag is deliberate friction — GitHub wants you to acknowledge that this can't be quietly undone |
+| 2026-08-27 | `git config user.email "...@users.noreply.github.com"` | Stop leaking a personal email into commits | No `--global`, so it applies to **this repo only**. Affects future commits; existing ones keep the old address |
+| 2026-08-27 | `gh api -X PUT repos/OWNER/REPO/branches/main/protection --input -` | Require PRs on main | `--input -` reads the JSON body from stdin, which is how you pass a heredoc to `gh api` |
+| 2026-08-27 | `gh api -X POST repos/OWNER/REPO/branches/main/protection/enforce_admins` | Apply protection to yourself too | **The one that mattered.** Protection defaults to exempting admins — on a solo repo that protects nobody |
+| 2026-08-27 | `git commit --allow-empty -m "test" && git push origin main` | Actually test the DoD | `--allow-empty` makes a commit with no file changes — perfect for testing a push rule. Got `GH006 ... protected branch hook declined`, then `git reset --hard origin/main` to discard it |
 | | | | |
 
 *Append a row every time you run something new. Keep the failures — those are the rows you'll actually come back and read.*
