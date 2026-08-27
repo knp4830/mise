@@ -57,10 +57,26 @@ _Not yet scaffolded. Replace this line after M0.3._
 
 ## Working agreement
 
-- Work one milestone at a time, from `docs/BUILD-PLAN.md`. One milestone = one branch = one PR.
-- After completing a milestone, append an entry to `docs/LEARNING-LOG.md` in the format that file establishes, and check the milestone's box in `docs/BUILD-PLAN.md`.
+- Work **one milestone at a time**, from `docs/BUILD-PLAN.md`. One milestone = one branch = one PR. Do not start the next milestone until the current one is closed out.
 - When I ask you to explain code, assume I'm early in my learning — explain the concept, not just the syntax.
 - Add any new terminal or git command to `docs/TERMINAL-LOG.md`, including the failures.
+
+### Closing out a milestone
+
+A milestone is done when its **DoD (Definition of Done) is observably true** — not when the code is written. "I implemented search" is not done; "searching 'shakshuka' returns it in under 100ms" is done. If you can't demonstrate the DoD, the milestone is still open — say so rather than checking the box.
+
+When the DoD is met, do these four things in order, without being asked:
+
+1. **Check the box** in `docs/BUILD-PLAN.md` — change `### ☐ M3.5` to `### ☑ M3.5`. Never delete a checked box; this file is the project's memory.
+2. **Append a LEARNING-LOG entry** in the format `docs/LEARNING-LOG.md` establishes: what we built, key files, how it works, why this way and what we rejected, new concepts, gotchas. Written for me in three months, who won't remember any of it.
+3. **Update "Current status"** at the bottom of this file to the next milestone.
+4. **Tell me the PR body to use**, including the line `Closes #<issue number>` — that keyword is what makes GitHub close the issue and move the board card automatically when the PR merges.
+
+Then stop. I review the diff and merge. Do not begin the next milestone in the same session.
+
+### Marking a milestone blocked
+
+If the DoD can't be met — a dependency is missing, a decision is needed from me, an approach didn't work — do **not** check the box or half-finish it. Instead: state plainly what's blocking, what you tried, and what decision you need. A milestone honestly marked blocked is more useful than one marked done that isn't.
 
 ## Reference docs
 

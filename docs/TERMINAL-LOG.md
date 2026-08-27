@@ -180,6 +180,24 @@ git reset --hard HEAD~1           # undo last commit, DESTROY the changes
 
 ---
 
+## Git commands that look interchangeable but aren't
+
+| You might type | What it actually does | Prefer |
+|---|---|---|
+| `git checkout -b name` | Create branch and switch. Errors if it exists. | ✅ this |
+| `git checkout -B name` | Create, **or silently reset an existing branch to the current commit**, discarding its unmerged work | ⚠️ avoid |
+| `git branch -D name` | Force-delete a branch (different command — `-D` is not a `checkout` flag) | when deleting |
+| `git add .` | Stage changes **in the current directory and below** | fine from repo root |
+| `git add -A` | Stage changes **anywhere in the repo**, wherever you're standing | ✅ this |
+| `git commit -a` | Auto-stage modified **tracked** files, then commit. **Skips untracked (new) files.** Opens an editor without `-m`. | see below |
+| `git commit -m "..."` | Commit what's staged, message inline | ✅ this |
+| `git push origin branch-name` | Explicit, works every time | fine |
+| `git push -u origin HEAD` | `HEAD` = current branch (no typos); `-u` sets upstream so later pushes are just `git push` | ✅ this |
+
+**The `-a` trap, spelled out.** `git commit -a` only picks up files git already knows about. Create `src/lib/queries.ts`, run `git commit -a -m "add queries"`, and that file is **not** in the commit. Everything looks fine locally and the deploy fails. `git add -A` first, or `git status` before every commit — untracked files appear in their own section, and noticing them is the habit.
+
+**`git add . && git commit -a` is redundant.** The `add` already staged everything, including new files; `-a` then re-stages the tracked ones. Harmless, but `git add -A && git commit -m "..."` is the same thing without the confusion.
+
 ## GitHub CLI (`gh`)
 
 ```bash
