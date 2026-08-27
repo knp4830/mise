@@ -501,4 +501,70 @@ The lesson generalises past Vercel: **check the response body, not just the stat
 
 ---
 
-## Entry 07 — [next entry goes here after M0.4]
+## Entry 07 — Docs in the repo, and why the repo went public
+
+**Milestone:** M0.4 + M0.5 · **Date:** 2026-08-27
+
+### What we built
+
+Nothing, in code terms. M0.4 was already satisfied — `CLAUDE.md` in the root and four docs in `docs/`, all on `main`. M0.5 required a decision, and the decision was to **make the repository public**.
+
+Phase 0 is now closed. Next is M1.1.
+
+### How it works
+
+`main` is protected. Every change must arrive through a pull request — including yours:
+
+```
+remote: error: GH006: Protected branch update failed for refs/heads/main.
+remote: - Changes must be made through a pull request.
+ ! [remote rejected] main -> main (protected branch hook declined)
+```
+
+Settings applied:
+
+| Setting | Value | Why |
+|---|---|---|
+| `required_pull_request_reviews` | enabled, **0 approvals** | Forces the PR, but doesn't demand an approver you don't have. You're solo |
+| `enforce_admins` | **true** | The one that matters — see Gotchas |
+| `allow_force_pushes` | false | A force-push to `main` can destroy commits irrecoverably |
+| `allow_deletions` | false | Nobody deletes `main` by accident |
+
+### Why this way (and what we rejected)
+
+**GitHub Free does not offer branch protection on private repositories.** Both the branch-protection and the newer rulesets APIs return the same 403: *"Upgrade to GitHub Pro or make this repository public."* So M0.5 could not be met as written without changing something.
+
+Four options were on the table:
+
+1. **Make the repo public** — free, unlocks real server-side protection, and turns the project into something showable.
+2. **GitHub Pro, $4/month** — meets the DoD exactly, costs money for a solo learning project.
+3. **A local `pre-push` hook** — free and private, but client-side only: bypassable with `--no-verify` and invisible on any other machine. It would have *simulated* the DoD rather than meeting it.
+4. **Defer it** — start Phase 1 without the guardrail.
+
+We chose public. The reasoning: the protection is real rather than simulated, it costs nothing, and a recipe app built from public-domain USDA data has nothing to hide. Option 3 was the tempting one and the wrong one — a guardrail you can silently bypass isn't a guardrail, and marking the box checked on that basis would have made this file lie.
+
+**Before flipping it, history was scanned, not assumed.** Going public exposes *every commit*, not just the current tip — so `git rev-list --all` was searched for service-role keys, JWTs, `sk-`/`ghp_` tokens, private keys, and AWS IDs, plus a check that no `.env` file was ever committed. Clean. `.env*` has been gitignored since the first commit, which is why.
+
+One thing the scan did surface: commits were authored under a personal gmail, and commit metadata is public and scraped. The existing ~40 commits keep it; `git config user.email` is now set **repo-locally** to the GitHub `noreply` address so new ones don't. Rewriting history to scrub it was rejected — it changes every SHA and orphans the merge commits from #38 and #39, which is a lot of disruption for an address that isn't a secret.
+
+### New concepts
+
+**Branch protection is server-side.** This is the whole point, and the contrast with option 3 is the lesson. A git hook lives in `.git/hooks/`, which is not committed, not shared, and skippable. Branch protection is enforced by GitHub on receipt — there is no local flag that gets around it.
+
+**`enforce_admins` is a separate switch.** Enabling protection does not, by default, apply it to repository admins. On a solo repo you *are* the admin, so protection without this flag protects `main` from precisely nobody.
+
+**0 required approvals still requires a PR.** These are independent settings. You get the discipline of opening a PR and reading your own diff, without needing a second human to click approve.
+
+### Gotchas
+
+**Protection that doesn't apply to you is decoration.** The first `PUT` returned `"enforce_admins": {"enabled": false}` — the API default. Every other field looked right. Had we stopped at "the API returned 200 and the settings look correct," M0.5 would have been checked while direct pushes to `main` still sailed through.
+
+Same failure mode as the Vercel login wall in Entry 06, and worth naming as a pattern: **a green response describing a configuration is not proof the configuration does anything.** Both times the fix was to test the actual behaviour — fetch the page anonymously; try the push and confirm it's rejected.
+
+The push test itself is safe to repeat: commit `--allow-empty` on `main`, push, watch it bounce, then `git reset --hard origin/main`.
+
+**Verify, don't assume, on inherited milestones.** M0.4 turned out to be already done — CLAUDE.md and the docs had been created along the way. It was still worth checking each item against the DoD rather than checking the box on the strength of "that sounds done."
+
+---
+
+## Entry 08 — [next entry goes here after M1.1]

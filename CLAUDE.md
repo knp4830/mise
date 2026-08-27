@@ -109,8 +109,9 @@ If the DoD can't be met — a dependency is missing, a decision is needed from m
 
 ## Current status
 
-Phase 0 — Foundations.
+**Phase 0 — Foundations: complete.** M0.1–M0.5 all closed.
 
-M0.3 is done — the app is live at **https://mise-mise14.vercel.app** and pushes to `main` redeploy automatically.
+- Live at **https://mise-mise14.vercel.app**; pushes to `main` redeploy automatically.
+- Repo is **public**, and `main` is protected — every change goes through a PR, including yours.
 
-Next up: **M0.4, project documentation in the repo.** (Largely already true — `CLAUDE.md` exists and the four docs are in `docs/`. Verify against the DoD rather than assuming.) Then **M0.5, branch protection on `main`.**
+Next up: **Phase 1, M1.1 — design the schema on paper first.** Produces `docs/SCHEMA-NOTES.md` with an ERD and a written rationale per table. No code, no Supabase project yet; M1.2 is where the migration lands.

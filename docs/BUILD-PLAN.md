@@ -220,7 +220,7 @@ Import the repo at vercel.com/new → Deploy. Wait for the URL.
 
 **DoD:** a public `*.vercel.app` URL loads the Next.js starter page. Pushing to `main` triggers a new deploy automatically.
 
-### ☐ M0.4 — Project documentation in the repo
+### ☑ M0.4 — Project documentation in the repo
 
 **Claude Code prompt:**
 ```
@@ -232,7 +232,7 @@ LEARNING-LOG.md, and GITHUB-SETUP.md into it.
 
 **DoD:** `CLAUDE.md` in root, three docs in `docs/`, committed and pushed.
 
-### ☐ M0.5 — Branch protection
+### ☑ M0.5 — Branch protection
 
 On GitHub: Settings → Branches → Add rule for `main` → require a pull request before merging.
 
