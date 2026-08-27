@@ -418,4 +418,87 @@ Whichever tier a recipe came from, it passes through the same normalization. Tha
 
 ---
 
-## Entry 06 — [next entry goes here after M0.3]
+## Entry 06 — The scaffold, and the deploy loop
+
+**Milestone:** M0.3 · **Merged:** 2026-08-27 · **PR:** #38
+
+### What we built
+
+An empty Next.js 15 app, deployed to a public URL. No features — that's the point. The milestone exists to prove the pipeline works end to end (laptop → GitHub → Vercel → public URL) while there is no code on top to confuse a diagnosis.
+
+Live at **https://mise-mise14.vercel.app**. Pushing to `main` redeploys automatically.
+
+### Key files
+
+| File | What it is |
+|---|---|
+| `src/app/layout.tsx` | The root layout. Renders `<html>` and `<body>`. Mandatory — every App Router app has exactly one. Wraps every page and persists across navigation |
+| `src/app/page.tsx` | The `/` route. The starter page, to be replaced in M2 |
+| `src/app/globals.css` | The single global stylesheet. Tailwind v4 config lives here, in `@theme` — this is where our CSS colour variables go |
+| `next.config.ts` | Next config. Empty for now |
+| `tsconfig.json` | Holds the `@/*` → `src/*` path alias |
+| `eslint.config.mjs` | Flat-config ESLint. We added `design/**` and `scripts/**` to `ignores` |
+| `postcss.config.mjs` | Wires `@tailwindcss/postcss` into the build |
+| `pnpm-workspace.yaml` | Not a workspace — it's where pnpm 11 keeps `allowBuilds`. See Gotchas |
+| `pnpm-lock.yaml` | Exact version of every transitive dependency. Committed on purpose: it's what makes Vercel build the same tree the laptop did |
+
+### How it works
+
+**The App Router is the folder structure.** There is no route table anywhere in the project. A folder under `src/app/` is a URL segment, and specially-named files inside it give that segment behaviour — `page.tsx` makes it routable, `layout.tsx` wraps it, `loading.tsx` and `error.tsx` handle those states. Files that aren't specially named aren't routes, which is why a component can safely sit next to the page that uses it.
+
+`src/app/recipes/[slug]/page.tsx` will become `/recipes/shakshuka` with no configuration.
+
+**`public/` vs `src/`.** Files in `public/` are served verbatim at the site root — `public/logo.svg` is `/logo.svg`, no processing, no import. Files imported from `src/` get optimised and fingerprinted by the build. Rule of thumb: `public/` is for things referenced by literal URL (`robots.txt`, `og-image.png`); everything else gets imported.
+
+**`src/` exists to separate code from config.** Without it, `app/` sits in the root beside `package.json`, `next.config.ts`, and `tsconfig.json`. With it, root = config, `src/` = code. The `@/*` alias points at `src/`, so `@/lib/queries/recipes` stays stable no matter how deep the importing file is. That matters more than it sounds — relative imports (`../../../lib/...`) break every time you move a file.
+
+**`.next/` is disposable.** Build output and cache, gitignored. If the dev server ever behaves impossibly, `rm -rf .next` is the correct first move, not a last resort.
+
+**The deploy loop:** push to a branch → Vercel builds it as a *preview* deploy with its own URL → merge to `main` → Vercel builds *production*. Vercel watches the GitHub repo directly; nothing needs to run locally.
+
+### Why this way (and what we rejected)
+
+**Pinned `create-next-app@15.5.24` rather than `@latest`.** `@latest` now resolves to Next 16. The stack decision in Entry 00 was Next 15, and a major-version jump on the first commit is not a thing to discover later.
+
+**Scaffolded into a scratch directory, then copied in.** `create-next-app` refuses to write into a non-empty folder, and this repo already had `CLAUDE.md`, `docs/`, `design/`, and `scripts/`. Three options existed: temporarily move the existing files aside, force the scaffold, or generate elsewhere and copy in. We generated in `/tmp` and copied with `rsync --ignore-existing`, which refuses to overwrite anything that already exists. The other two both put existing work at risk for no benefit.
+
+**Kept our own `README.md` and wrote our own `.gitignore`** rather than taking the generated ones.
+
+**Scoped ESLint to application code.** `design/support.js` is the mockup runtime — third-party-ish code we don't maintain — and it threw 2 errors and 8 warnings. Adding it to `ignores` was right; "fixing" a file that only exists to render the design mockup would have been busywork.
+
+### New concepts
+
+**Lockfile.** `package.json` says "React 19-ish"; `pnpm-lock.yaml` says "React 19.1.0 with this exact hash, and here are all 800 packages underneath it." Committing it is what makes builds reproducible across machines. It's machine-generated — never hand-edit it, and a large diff in it is normal.
+
+**Static prerendering.** `pnpm build` printed `○ (Static)` next to both routes: they're rendered to HTML at build time, not per request. This is the property that makes Next the right call for recipe pages — see Entry 00 on why search crawlers matter here.
+
+**Deployment Protection.** Vercel now defaults new projects to requiring a Vercel login for *all* deployments, including production. See Gotchas — this one nearly passed as done when it wasn't.
+
+### Gotchas
+
+**pnpm 11 blocks dependency install scripts, and it's a hard error.** `ERR_PNPM_IGNORED_BUILDS: unrs-resolver` — a transitive dependency of `eslint-config-next`. This is a supply-chain defence: a package's `postinstall` script is arbitrary code running on your machine, so pnpm now requires explicit approval. It also fails `pnpm build`, not just `pnpm install`.
+
+The trap is *where* the approval goes. Adding `pnpm.onlyBuiltDependencies` to `package.json` — the answer everywhere online — does nothing now; pnpm 11 silently ignores that field. Only `pnpm rebuild` prints the warning that says so. The setting moved to `pnpm-workspace.yaml` (even in a non-workspace project) and the key is `allowBuilds`:
+
+```yaml
+allowBuilds:
+  unrs-resolver: true
+```
+
+pnpm itself writes a placeholder block into that file when it hits this. Reading the file pnpm generated was the fix — after three wrong attempts based on the error message.
+
+This had to be committed, not approved interactively, or Vercel would have hit the identical failure.
+
+**A stale `.next` breaks `pnpm dev`.** Running `pnpm build` then `pnpm dev` gave `Cannot find module '.next/server/app/page.js'` on every request. `rm -rf .next`.
+
+**"Port 3000 is in use … using 3001 instead" is a warning, not an error.** An orphaned dev server held 3000, the new one quietly moved to 3001, and requests to 3000 hit the *old* server — producing a 404 that looked like a routing bug. `lsof -ti:3000 | xargs kill -9`.
+
+**HTTP 200 does not mean the page loaded.** The biggest one. The production URL returned 200 to an anonymous request, and the deploy was green — but the body was `<title>Login – Vercel</title>`. Vercel Authentication was on by default, so every visitor got an SSO wall. It looked perfect in the browser because we were logged into Vercel already.
+
+Fixed in Settings → Deployment Protection → Vercel Authentication → **Only Preview Deployments** (production public, preview URLs still private).
+
+The lesson generalises past Vercel: **check the response body, not just the status code.** A DoD verified by status code alone would have marked this milestone done while the site was invisible to every user.
+
+---
+
+## Entry 07 — [next entry goes here after M0.4]

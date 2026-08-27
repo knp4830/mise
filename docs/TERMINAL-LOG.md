@@ -275,6 +275,9 @@ history | grep mkdir     # find a command you ran before but can't remember
 | 2026-08-26 | `pnpm dev` | Run the dev server | **Failed twice.** (1) `MODULE_NOT_FOUND .next/server/app/page.js` — a stale `.next` left by `pnpm build`; `rm -rf .next` fixes it. (2) Then a 404, because an orphaned dev server still held port 3000, so the new one silently moved to 3001 and I was curling the old one |
 | 2026-08-26 | `lsof -ti:3000 \| xargs kill -9` | Kill whatever holds a port | `lsof -ti:PORT` prints just the PIDs of processes listening there; `xargs` feeds them to `kill`. The fix for "port is in use" |
 | 2026-08-26 | `curl -s -o file -w "%{http_code}" http://localhost:3210` | Prove the page actually serves | `-o` saves the body, `-w "%{http_code}"` prints just the status. Checking for a 200 *and* grepping the body is what makes it evidence rather than a guess |
+| 2026-08-27 | `gh api repos/OWNER/REPO/deployments --jq '.[0].id'` | Find the Vercel deploy from the terminal | Vercel writes a *deployment* record back to GitHub. `--jq` filters the JSON inline so you don't need to pipe to `jq` |
+| 2026-08-27 | `gh api repos/OWNER/REPO/deployments/ID/statuses --jq '.[].environment_url'` | Get the live URL | The status record carries the deployed URL and whether the build succeeded |
+| 2026-08-27 | `curl -s -o page.html -w "%{http_code}" URL` then `grep "<title>" page.html` | Prove the site is really public | **Caught a real bug.** Status was 200 but the body was `<title>Login – Vercel</title>` — Vercel Authentication was on. Always check the body, not just the code |
 | | | | |
 
 *Append a row every time you run something new. Keep the failures — those are the rows you'll actually come back and read.*

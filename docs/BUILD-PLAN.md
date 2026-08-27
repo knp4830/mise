@@ -199,7 +199,7 @@ Follow `GITHUB-SETUP.md` end to end. Done when: repo exists, board exists with a
 
 **DoD:** `gh repo view` opens your repo. Project board has ≥20 issues in Backlog.
 
-### ☐ M0.3 — Scaffold and deploy blank
+### ☑ M0.3 — Scaffold and deploy blank
 
 **Claude Code prompt:**
 ```
