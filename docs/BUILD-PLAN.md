@@ -4,6 +4,52 @@
 > **How to use it:** work top to bottom. One milestone = one branch = one pull request = one Claude Code session. Check the box only when the Definition of Done is actually true.
 > **Never delete a checked box.** This file is the project's memory.
 
+## GitHub issue numbers
+
+The address in this file (`M3.5`) maps to a GitHub issue number. Put `Closes #<number>` in every PR body — that keyword is the **only** thing that closes the issue and moves the board card. A PR that plainly does an issue's work is invisible to GitHub without it, and the link cannot be added retroactively once the PR is merged.
+
+| Issue | Milestone | State |
+|---|---|---|
+| #1 | **M0.3** Scaffold Next.js app and deploy blank to Vercel | ☑ |
+| #2 | **M0.4** Add CLAUDE.md and docs/ | ☑ |
+| #3 | **M0.5** Enable branch protection on main | ☑ |
+| #4 | **M1.1** Design schema and write SCHEMA-NOTES.md | ☑ |
+| #5 | **M1.2** Supabase project and initial migration | ☑ |
+| #6 | **M1.3** Row Level Security policies + test plan | ☑ |
+| #7 | **M1.4** Seed script with the six mockup recipes | ☑ |
+| #8 | **M1.6** Typed Supabase clients (server + browser) | ☑ |
+| #9 | **M1.5.1** Canonical ingredients + alias table | ☐ |
+| #10 | **M1.5.2** Ingredient parser (ingredient-parser-nlp) | ☐ |
+| #11 | **M1.5.3** USDA MyPlate Kitchen bulk import | ☐ |
+| #12 | **M1.5.4** USDA FoodData Central nutrition pipeline | ☐ |
+| #13 | **M1.5.5** Recipe generation pipeline (Tier 2, Mise voice) | ☐ |
+| #14 | **M1.5.6** Admin review queue at /admin/review | ☐ |
+| #15 | **M1.5.7** Fill to 500+ and close pantry coverage gaps | ☐ |
+| #16 | **M2.1** Extract Mise design tokens into globals.css | ☐ |
+| #17 | **M2.2** Build UI primitives + /kitchen-sink route | ☐ |
+| #18 | **M2.3** App shell: header, nav, footer, responsive | ☐ |
+| #19 | **M3.1** Browse page with cursor-paginated recipe grid | ☐ |
+| #20 | **M3.2** Recipe detail page with servings scaler | ☐ |
+| #21 | **M3.3** PANTRY MATCHER — match_recipes RPC + autocomplete | ☐ |
+| #22 | **M3.4** Conventional filters layered into match_recipes | ☐ |
+| #23 | **M3.5** Postgres full-text search | ☐ |
+| #24 | **M3.6** Landing page (pantry input above the fold) | ☐ |
+| #25 | **M3.7** Programmatic /what-can-i-make/[combo] SEO pages | ☐ |
+| #26 | **M4.1** Supabase Auth: email + Google, middleware, login/signup | ☐ |
+| #27 | **M4.2** Favorites with optimistic updates | ☐ |
+| #28 | **M4.3** Account page: Library / My Recipes / Settings | ☐ |
+| #29 | **M5.1** Recipe form with dynamic ingredient and step rows | ☐ |
+| #30 | **M5.2** Draft autosave and publish validation | ☐ |
+| #31 | **M5.3** Edit and delete own recipes | ☐ |
+| #32 | **M6.1** Error boundaries, not-found page, loading states | ☐ |
+| #33 | **M6.2** Sentry error monitoring | ☐ |
+| #34 | **M6.3** PostHog analytics on pantry queries and signups | ☐ |
+| #35 | **M6.4** SEO: metadata, OG tags, sitemap, JSON-LD Recipe schema | ☐ |
+| #36 | **M6.5** Pre-launch checklist and Lighthouse pass | ☐ |
+| #37 | **M6.6** Custom domain | ☐ |
+
+---
+
 ## How to read this document
 
 **Milestone IDs — `M3.5`**
