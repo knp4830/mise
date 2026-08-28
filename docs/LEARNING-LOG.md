@@ -567,4 +567,267 @@ The push test itself is safe to repeat: commit `--allow-empty` on `main`, push, 
 
 ---
 
-## Entry 08 — [next entry goes here after M1.1]
+## Entry 08 — The schema, on paper
+
+**Milestone:** M1.1 · **Date:** 2026-08-27
+
+### What we built
+
+`docs/SCHEMA-NOTES.md` — 16 tables, a mermaid ERD, and a written argument for each one. No SQL. The build plan calls Phase 1 the most important phase in the project, for a reason worth restating: UI is cheap to change, and a schema with the wrong shape is expensive to change once there's data in it.
+
+### Key files
+
+- `docs/SCHEMA-NOTES.md` — the design. M1.2 implements it; this file explains it.
+
+### How it works
+
+The core is three tables and a join:
+
+```
+recipes ──< recipe_ingredients >── ingredients
+(the dish)   (qty, unit, prep)      (the thing itself)
+```
+
+`recipe_ingredients` is the **join table**: one row per ingredient-in-a-recipe, holding what's true about that pairing. The word `garlic` is stored once, in `ingredients`, and every recipe points at that row.
+
+Around that: `ingredient_aliases` (green onion → scallion), `units` (with conversion factors), `recipe_steps`, four lookup tables for cuisine/diet/cookware/allergens, and `favorites`.
+
+### Why this way (and what we rejected)
+
+**Four separate lookup tables, not one generic `tags` table.** The generic version is less SQL and one autocomplete covers everything. We rejected it because the four facets don't behave alike: cuisine is exactly one per recipe, diet and cookware are many, and allergens are *inverted* — you filter to exclude them. A generic table lets a recipe have three cuisines, which is meaningless, and makes the safety-critical filter look like every other one.
+
+**Allergens derive from ingredients, cached on the recipe.** The mockup tags them per recipe (`allergens:['Fish','Soy']`), which is simpler and needs no trigger. We rejected it because it's a human-maintained claim with a silent, harmful failure: soy sauce contains **gluten** as well as soy, and missing that on one recipe out of 1,500 serves it to a coeliac user with no error anywhere. Tagging the ingredient once makes every recipe using it correct forever.
+
+**A `units` table with conversion factors, not a text column.** Three features need to *add* quantities — the shopping list merging 2 cloves + 3 cloves, serving-scaling, and the v1.4 meal planner's cost objective — and text can't be added. Cheap now; a backfill of every row at 1,500 recipes later.
+
+**Nutrition as six columns on `recipes`, per serving.** Rejected a 1:1 table and a key/value table: every macro filter is a range scan on the hot path, and columns keep it a plain `WHERE` with no join.
+
+### New concepts
+
+**Normalisation** — each fact lives in exactly one place. `garlic` is one row; 40 recipes reference it. Fix a typo once and it's fixed everywhere. The alternative stores the word 40 times and lets 40 copies drift apart.
+
+**Many-to-many needs a third table.** One recipe has many ingredients; one ingredient appears in many recipes. Postgres has no way to express that with two tables — the join table *is* the relationship, and it's where per-pairing facts (quantity, unit, "finely minced") belong.
+
+**Derived vs. authored data.** `recipe_allergens` holds no original information — it's computed from `ingredient_allergens`. Storing it anyway is a deliberate trade: query-time speed for the cost of a trigger and the risk of staleness. Worth knowing that's a normal, named tradeoff rather than a mistake.
+
+### Gotchas
+
+**A recipe can list the same ingredient twice.** "1 tbsp oil for the pan, 2 tbsp for the dressing" is two legitimate rows with the same `ingredient_id`. So there must be **no** `UNIQUE (recipe_id, ingredient_id)` — a constraint that looks obviously correct and would reject real recipes. Worse, the M3.3 matcher sketch in the build plan uses `count(*)`, which double-counts those rows and computes the wrong coverage ratio. It needs `count(DISTINCT ingredient_id)`.
+
+**`search_vector` can't be a `GENERATED` column.** M3.5 asks for a generated tsvector combining title *and ingredient names*. Postgres generated columns may only reference the same row, so this needs a trigger. The trap: `GENERATED ALWAYS AS (to_tsvector('english', title)) STORED` compiles fine — it just silently indexes titles only, and ingredient search quietly doesn't work.
+
+**Volume → mass needs the ingredient, not the unit.** A tablespoon of honey and a tablespoon of flour weigh different amounts, so `to_base_factor` gets you tbsp → ml but never ml → g. That's what `ingredients.density_g_per_ml` is for, and code must refuse the conversion when it's absent rather than guess.
+
+**The build plan skips M1.5.** Phase 1 goes M1.4 → M1.6; there is no M1.5 (Phase *1.5* is a separate section). Left as-is — renumbering would break the issue and branch names that already point at these addresses.
+
+---
+
+## Entry 09 — The migration, and testing it before shipping it
+
+**Milestone:** M1.2 · **Date:** 2026-08-27
+
+### What we built
+
+`supabase/migrations/20260828020846_initial_schema.sql` — 478 lines implementing `SCHEMA-NOTES.md`. 16 tables, 5 trigger functions, 17 indexes, RLS enabled everywhere, and the fixed reference vocabularies (units, allergens, diets, cookware, cuisines) seeded idempotently.
+
+Applied to the live project with `pnpm db:push`.
+
+### Key files
+
+- `supabase/migrations/2026…_initial_schema.sql` — the schema. Never edit an applied migration; write a new one.
+- `.env.local` — the project URL and publishable key. Gitignored.
+- `.env.example` — the same keys with no values, committed, so a future clone knows what it needs.
+- `package.json` — `db:push`, `db:diff`, `db:types`.
+
+### How it works
+
+**Two derived-data mechanisms, both triggers.**
+
+`recipe_allergens` is a cache rebuilt from `ingredient_allergens` whenever a recipe's ingredients change *or* an ingredient's allergens change. The second case is the one per-recipe tagging cannot handle at all: tag `soy sauce` as containing gluten today, and all 40 recipes using it become correct immediately.
+
+`search_vector` is computed in a **BEFORE** trigger on `recipes`. It has to be a trigger rather than a `GENERATED` column because it pulls ingredient names from two other tables, and generated columns may only see their own row. BEFORE rather than AFTER because an AFTER trigger that `UPDATE`s the row it fired on recurses forever. Child tables "touch" their parent recipe (`set updated_at = now()`), which re-runs that one BEFORE trigger — one mechanism, not two.
+
+### Why this way (and what we rejected)
+
+**RLS enabled in M1.2, with zero policies, rather than waiting for M1.3.** Enabled-with-no-policies denies everything. Rejected leaving it off until the policy milestone: the publishable key is live in `.env.local` from the moment the project exists, and RLS-off plus a public key means a world-writable database in the gap between two milestones. A safe default costs nothing.
+
+**Reference vocabularies seeded in the migration**, not in M1.4's seed script. Units and allergens are fixed vocabulary the schema's constraints are meaningless without, not "data". Idempotent via `on conflict do nothing`.
+
+**`sort_order`, not `position`.** `POSITION` is a reserved SQL keyword; naming a column that means quoting it forever.
+
+### New concepts
+
+**Migrations are append-only.** A migration is a timestamped SQL file that runs once and is recorded as having run. You never edit one that's been applied — the remote has already run the old text, and editing it makes the two histories disagree. Changing the schema means writing a *new* migration. This is also why CLAUDE.md forbids touching `supabase/migrations/`.
+
+**Publishable vs. secret key.** The publishable key (`sb_publishable_…`, formerly `anon`) ships to browsers by design. It identifies the project; it does not grant access — every query it makes runs through RLS. The secret key (`sb_secret_…`, formerly `service_role`) holds `BYPASSRLS`: Postgres skips policy evaluation entirely. In a `NEXT_PUBLIC_` variable it would be baked into the JS bundle permanently. That asymmetry is the whole reason RLS has to be right.
+
+**Trigger timing.** BEFORE triggers can modify the row being written (assign to `NEW`); AFTER triggers cannot, and must issue a separate `UPDATE` — which is how you accidentally write infinite recursion.
+
+### Gotchas
+
+**`NEW` is unassigned during `DELETE`, and `coalesce()` does not rescue you.** The first draft used `coalesce(new.recipe_id, old.recipe_id)` — the idiom everyone reaches for. It raises *"record new is not assigned yet"*, because the field access fails before `coalesce` runs. All three trigger functions now branch on `tg_op`. **This was caught by testing, not by reading**, and it would have broken every ingredient removal.
+
+**Test the migration before pushing it.** No Docker was running, so: start a throwaway `postgres:16-alpine`, stub the `auth` schema (`auth.users`, `auth.uid()`), apply the migration, exercise every trigger and constraint, then delete the container. Roughly five minutes, and it caught the trigger bug plus confirmed six behaviours that would otherwise have been assumptions.
+
+The single most useful assertion: inserting the same ingredient twice into one recipe gave `count(*) = 5` and `count(DISTINCT ingredient_id) = 4`. That's the M3.3 ranking bug from Entry 08, demonstrated rather than argued.
+
+**A check constraint behind a trigger can be unreachable.** `recipes_published_has_date` never fires, because the BEFORE trigger fills `published_at` in first. Harmless, kept as a backstop — but worth noticing that a constraint you can't trigger isn't testing anything.
+
+**Bulk import will be slow.** Row-level AFTER triggers mean a 10-ingredient recipe recomputes its search vector 10 times. Fine for 6 seed recipes; revisit before M1.5.3 loads ~1,000.
+
+---
+
+## Entry 10 — Row Level Security
+
+**Milestone:** M1.3 · **Date:** 2026-08-27
+
+### What we built
+
+`supabase/migrations/20260828021933_rls_policies.sql` — policies for all 16 tables, and `docs/RLS-TEST-PLAN.md`, 10 tests to run in the Supabase SQL Editor.
+
+Verified twice: 18 tests (10 read, 8 write) against a local Postgres with real `anon`/`authenticated` roles before pushing, then on the live database — reference data went from `[]` to 16 units and 8 allergens the moment the policies landed, while writes stayed refused with `42501`.
+
+### How it works
+
+A policy is a `WHERE` clause Postgres bolts onto every query against a table, per command, per role. If no policy grants a row, that row does not exist as far as the caller is concerned.
+
+| Table group | Rule |
+|---|---|
+| Reference data (units, ingredients, aliases, allergens, cuisines, diets, cookware) | `select using (true)`; no write policy at all |
+| `recipes` | published readable by all; drafts readable by author; write only where `author_id = auth.uid()` |
+| Recipe children (steps, ingredients, diets, cookware, allergen cache) | visibility follows the parent via `can_read_recipe()` |
+| `favorites` | fully private to `user_id` |
+| `profiles` | publicly readable, self-writable |
+
+Two helper functions — `can_read_recipe()` and `owns_recipe()` — keep the visibility rule in one place instead of copied across five child tables. Both are `security definer` so they can read `recipes` without being filtered by the very policies they exist to evaluate, which would recurse.
+
+### Why this way (and what we rejected)
+
+**Child tables get their own policies rather than relying on joins.** Rejected assuming that hiding `recipes` is enough: it isn't. Leave `recipe_ingredients` world-readable and a draft recipe is reconstructable through the back door — you can't see the title, but you can see exactly what's in it.
+
+**One helper function instead of five copies of the same subquery.** If the visibility rule changes (say, "unlisted" recipes get added), it changes in one place. Five hand-copied `exists (...)` clauses is five chances to update four of them.
+
+**`(select auth.uid())` rather than a bare `auth.uid()`.** Wrapping it in a scalar subquery lets Postgres evaluate it once per query rather than once per row. On a 1,500-row scan that's one call instead of 1,500.
+
+**`security definer` functions have their `search_path` pinned** to `public, pg_temp`. A definer function with a mutable search path is a textbook privilege-escalation hole: the caller sets `search_path` to a schema they control, and the function runs their code with the owner's rights.
+
+### New concepts
+
+**`USING` vs `WITH CHECK`.** `USING` decides which *existing* rows a command may touch (SELECT/UPDATE/DELETE). `WITH CHECK` decides what a row is allowed to look like *after* a write (INSERT/UPDATE). `UPDATE` needs both — with only `USING`, a user could take a recipe they own and reassign `author_id` to someone else: the row they touched was legitimately theirs, and nothing examines what it became.
+
+**Omitting a policy is how you deny.** There is no `deny` statement. Reference tables have a `SELECT` policy and no write policy, so writes are refused by absence. Anything not explicitly granted is refused.
+
+**Superusers bypass RLS entirely.** The Supabase SQL Editor connects as `postgres`. Without `set local role authenticated`, every test appears to pass while nothing is tested at all.
+
+### Gotchas
+
+**An unauthorised UPDATE is not an error — it's `UPDATE 0`.** This is the one to remember. A row you may not touch isn't rejected, it's *invisible*, so the statement matches nothing and reports success against zero rows. Code that asks "did this throw?" concludes the update worked. **Check the affected-row count.** This will matter directly in M5.3 (edit and delete).
+
+Only `INSERT` — and `UPDATE`'s `WITH CHECK` — produce the loud `42501: new row violates row-level security policy`, because there the offending row is right there to reject.
+
+**`set local` dies with its transaction.** In the SQL Editor, `set local role` and `set local request.jwt.claim.sub` must be in the *same* `begin … rollback` block as the statement they apply to. A separate block is a fresh session with no uid, so `auth.uid()` returns NULL and the author tests fail for the wrong reason. The first local test run hit exactly this: `set_config(..., true)` is transaction-scoped, psql autocommits per statement, and two tests failed until it was changed to session scope. **The policies were right; the harness was wrong** — worth being slow to blame the code under test.
+
+**Favorites can leak recipe ids.** The INSERT policy requires `can_read_recipe(recipe_id)` as well as ownership. Without it, favouriting becomes an oracle: try ids, and a success tells you a draft with that id exists.
+
+---
+
+## Entry 11 — Seed data, and canonicalisation in miniature
+
+**Milestone:** M1.4 · **Date:** 2026-08-27
+
+### What we built
+
+`supabase/seed.sql` — the six mockup recipes, loaded idempotently. Plus `scripts/db-seed.sh` and a `db:seed` script, and a third migration adding the `portion` unit.
+
+Loaded counts: 6 recipes, 37 recipe_ingredients, 25 steps, 9 diet tags, 8 cookware, 30 ingredients, 16 aliases, 12 ingredient-allergen links, and 10 rows of `recipe_allergens` that the seed never wrote.
+
+### How it works
+
+The recipes were **extracted from `design/Mise.dc.html` by evaluating its `RECIPES` array**, not retyped. Retyping 34 ingredient lines by hand is a guaranteed source of silent transcription errors in exactly the data everything else depends on.
+
+Idempotency has two halves. Ingredients and aliases upsert on their natural key. Recipes upsert on `slug`, then their children are **deleted and rebuilt**. Rebuilding rather than upserting children means deleting a line from `seed.sql` actually removes it from the database — an upsert-only seed can add and change but never remove, so the file and the database silently drift apart.
+
+### Why this way (and what we rejected)
+
+**SQL rather than a TypeScript seed script.** Rejected TS: it would need a Postgres driver or the secret key, and this is pure data manipulation with no logic. SQL also runs unchanged in three places — the CLI, `psql`, or pasted into the SQL Editor.
+
+**Seeding connects directly to Postgres, not through the API.** It has to bypass RLS: the publishable key has no write policies, deliberately. That's the same reason the script needs `DATABASE_URL` rather than the key already in `.env.local`.
+
+**Allergens are never inserted by the seed.** Only `ingredient_allergens` is written; `recipe_allergens` is left to the trigger. Writing the cache by hand is precisely the mistake Decision 2 exists to prevent.
+
+### New concepts
+
+**Canonicalisation is the actual work.** 34 ingredient lines in the mockup became **30 canonical ingredients**. `garlic`, `garlic, grated`, and `garlic, minced` are one row with three `prep_note`s. Without that collapse, a pantry containing garlic would match one recipe out of the three that use it — and it would fail *silently*, returning fewer results rather than an error. This is M1.5.1's problem in miniature, at a scale where you can still check every row by hand.
+
+**Direct vs. pooled connections.** Supabase offers three. *Direct* is a real TCP connection, IPv6-only on the free tier. *Session pooler* is pgBouncer over IPv4, behaving like a normal connection. *Transaction pooler* borrows a connection per transaction — right for serverless, but no prepared statements or session state.
+
+### Gotchas
+
+**Docker can't reach an IPv6-only host.** `pnpm db:seed` failed with *"Network unreachable"* against `db.<ref>.supabase.co`, because direct connections resolve to IPv6 and Docker's default bridge network is IPv4-only. The session pooler string fixes it. The error is distinctive: *unreachable* means no route, as opposed to *connection refused* (nothing listening) or an auth failure.
+
+**Deriving allergens found two errors in the design mockup.** Gochujang-Glazed Salmon is tagged `Fish, Soy` but derives `Fish, Soy, Gluten, Sesame` — soy sauce and gochujang both contain wheat, and the recipe has sesame oil *and* sesame seeds. That is a real safety bug the mockup shipped with, caught automatically by tagging ingredients rather than recipes.
+
+Miso Mushroom Ramen derives an extra `Egg` from its *optional* soft-boiled egg. That one is a genuine open question rather than a bug — deferred to M3.4, where the allergen filter is actually built.
+
+**Test fixtures are not self-cleaning.** The RLS test plan's setup block persists by design, and its teardown has to be run deliberately. `rlstest-published` sat in the live catalog until it was noticed by counting rows through the API. Any test that writes to a shared database needs its teardown treated as part of the test, not an optional footnote.
+
+---
+
+## Entry 12 — The typed client, and why the App Router needs two
+
+**Milestone:** M1.6 · **Date:** 2026-08-27 · **Closes Phase 1**
+
+### What we built
+
+- `src/types/database.ts` — 711 lines generated from the live schema by `pnpm db:types`. All 16 tables, both enums, the RLS helper functions.
+- `src/lib/supabase/server.ts` — for Server Components, Server Actions, Route Handlers.
+- `src/lib/supabase/client.ts` — for Client Components.
+- `src/lib/queries/recipes.ts` — the first real query, `getRecipeCards()`.
+
+### How it works
+
+`supabase gen types typescript --linked` introspects the actual database and emits a `Database` type. Passing it as `createServerClient<Database>(...)` is what turns `.from("recipes").select("title")` from a string-based API into a checked one — the string literal is parsed at the type level and validated against the real columns.
+
+### Why two clients
+
+Both talk to the same database with the same key. The difference is entirely **where the session lives**.
+
+A Supabase session is a JWT in a cookie. Reading and writing that cookie works differently on each side of the server/client boundary:
+
+| | Server | Browser |
+|---|---|---|
+| cookie access | `cookies()` from `next/headers`, request-scoped | `document.cookie` |
+| can it write cookies? | only in Server Actions and Route Handlers | yes |
+| exists at all during render? | yes | no |
+
+Use the browser client in a Server Component and it reaches for `document`, which doesn't exist — the render crashes. Use the server client in a Client Component and it imports `next/headers`, which isn't available in the browser bundle; the build fails.
+
+The subtler rule: **the server client must be created inside the function that uses it, never at module scope.** `cookies()` is request-scoped. A client constructed once at import time captures one request's cookies and then serves that session to every subsequent visitor. It would work perfectly in local development with one user and leak sessions between strangers in production.
+
+### Why this way (and what we rejected)
+
+**No `.eq("status", "published")` in `getRecipeCards()`.** RLS already restricts reads to published rows plus the caller's own drafts. Rejected filtering again in the query: it duplicates a rule that lives in the database, and two copies of a security rule eventually disagree — usually when someone edits the easy one.
+
+**Queries live in `src/lib/queries/`, not inline in components.** A CLAUDE.md rule. The payoff arrives in M3.3, when the pantry matcher becomes an RPC call with real ranking logic that several pages need.
+
+**The `catch {}` in `setAll` is deliberate.** Server Components cannot set cookies. Supabase attempts to write refreshed tokens during render, which throws there. Swallowing it is correct — middleware refreshes the session on the next request. Without the catch, every expiring session crashes the page.
+
+### New concepts
+
+**Generated types are a snapshot, not a live link.** `database.ts` reflects the schema *at the moment it was generated*. Change the database and it is silently stale — TypeScript keeps agreeing with an outdated picture. Re-run `pnpm db:types` after every migration. Treat it as part of the migration, not a separate chore.
+
+### Gotchas
+
+**A clean typecheck proves nothing by itself.** It would also pass with the types wired up wrong, or not wired at all. The real check is the *negative* one: change a column to `cook_time_minutes` and confirm it fails:
+
+```
+error TS2322: Type 'SelectQueryError<"column 'cook_time_minutes' does not exist on 'recipes'.">[]'
+```
+
+That error is the evidence. Same pattern as the RLS test plan and the Vercel login wall — verify the failure, not just the success.
+
+**`search_vector` generates as `unknown`.** `tsvector` has no TypeScript equivalent. That's correct: you query *through* it with `.textSearch()`, never read it.
+
+---
+
+## Entry 13 — [next entry goes here after M1.5.1]

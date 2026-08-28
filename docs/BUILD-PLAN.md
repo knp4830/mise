@@ -247,7 +247,7 @@ On GitHub: Settings → Branches → Add rule for `main` → require a pull requ
 > **Time:** 2–3 days. **Goal:** a database that can answer every filter question in the MVP.
 > **This is the most important phase in the project.** UI is cheap to change; a schema with the wrong shape is expensive to change once there's data in it. Go slow here.
 
-### ☐ M1.1 — Design the schema on paper first
+### ☑ M1.1 — Design the schema on paper first
 
 Before writing SQL, answer these. Write the answers into `docs/SCHEMA-NOTES.md`.
 
@@ -269,7 +269,7 @@ normalization matters, using the ingredients example.
 
 **DoD:** `docs/SCHEMA-NOTES.md` exists with an ERD (mermaid diagram is fine) and a written rationale for each table.
 
-### ☐ M1.2 — Supabase project + migrations
+### ☑ M1.2 — Supabase project + migrations
 
 **Claude Code prompt:**
 ```
@@ -284,7 +284,7 @@ safe in the browser and the other is never.
 
 **DoD:** migration file committed; tables visible in the Supabase dashboard.
 
-### ☐ M1.3 — Row Level Security
+### ☑ M1.3 — Row Level Security
 
 Do not skip this and do not defer it. RLS is Postgres deciding, at the database level, which rows a given user is allowed to see or change. Without it, your anon key — which is public, in the browser, by design — lets anyone read and write everything.
 
@@ -301,7 +301,7 @@ SQL editor to prove each policy actually blocks what it should.
 
 **DoD:** RLS enabled on all tables; you have personally run the test plan and seen an unauthorized query fail.
 
-### ☐ M1.4 — Seed data
+### ☑ M1.4 — Seed data
 
 The mockup already contains six complete, well-structured recipes: Gochujang-Glazed Salmon, Chana Masala, Cacio e Pepe, Shakshuka, Miso Mushroom Ramen, Harissa Roast Cauliflower. Free content — use it.
 
@@ -316,7 +316,7 @@ able to run it twice without duplicates.
 
 **DoD:** `pnpm db:seed` populates a fresh database with six complete recipes.
 
-### ☐ M1.6 — Typed database client
+### ☑ M1.6 — Typed database client
 
 **Claude Code prompt:**
 ```
@@ -735,6 +735,40 @@ Already designed in the mockup. `shopping_list_items` table, "Add all ingredient
 
 ### v1.3 — API-assisted recipe import
 Admin-only tool that pulls from a recipe API, normalizes it into the Mise schema, and puts it in a review queue you approve by hand. Check the licensing terms of whichever API before storing anything.
+
+### v1.4 — Weekly meal planner **(the ambitious one)**
+
+> Added 2026-08-27 at Kevin's request. Flagged up front: **this is the hardest feature in the entire plan.** It is here so the data model doesn't accidentally rule it out — see the dependencies below.
+
+**What the user asks for:** "Plan my week." They get seven dinners, one shopping list, and a total cost — chosen so that the ingredients bought get *used up* rather than half a bunch of cilantro rotting in the drawer, kept as cheap as possible, and hitting a goal they set (a calorie target, a protein floor, "vegetarian", "under $60").
+
+**Why it's hard, stated honestly.** This is not a query. It's a *constrained optimisation* problem, and a known-hard one:
+
+- **Maximise ingredient reuse** — choosing 7 recipes whose ingredient sets overlap heavily. This is a form of *maximum coverage*; picking the best subset is NP-hard, so at 1,500 recipes you cannot check every combination (1,500 choose 7 is about 10^18).
+- **Minimise cost** — but cost is per *package purchased*, not per gram used. Buying a bunch of cilantro to use 2 tbsp charges you for the bunch. So the objective has to price **what you buy**, not what the recipe consumes — and that's precisely what creates the reuse incentive.
+- **Minimise waste** — leftover quantity across the week, which is the same computation viewed from the other side.
+- **Hit the goal** — nutrition targets as constraints, not preferences.
+
+Four objectives that trade against each other. Cheapest and least-wasteful is seven variations of rice and beans, which nobody will cook. **Variety has to be an explicit constraint**, or the optimiser will produce a technically-optimal plan that's inedible in practice.
+
+**The approach when we get there:** a greedy seed (pick the highest-scoring recipe, then repeatedly add the recipe with the best marginal score given what's already in the basket) followed by local search (swap one recipe at a time, keep improvements). Greedy alone is decent here; maximum-coverage has a known ~63% guarantee for greedy, and the local-search pass closes much of the rest. **Do not attempt exact optimisation.** Being 90% as good and instant beats optimal and 40 seconds.
+
+**Hard dependencies — this cannot start before all four exist:**
+
+| Needs | From | Why |
+|---|---|---|
+| Canonical ingredients | M1.5.1 | Overlap is meaningless if `scallion` and `green onion` are different rows |
+| Unit conversion | M1.1 `units` table | Can't sum 2 tbsp + 1 tsp without a common base |
+| Per-ingredient prices **and package sizes** | **new — doesn't exist yet** | The objective prices packages bought, not grams used |
+| Per-ingredient nutrition | v1.2 / M1.5.4 | Goal constraints need per-ingredient USDA data |
+
+**New tables it will need:** `ingredient_packages` (ingredient_id, package_size, unit, price, retailer, updated_at), `meal_plans` (user_id, week_of, goal_json, total_cost), `meal_plan_recipes` (plan_id, recipe_id, day, servings).
+
+The price data is the real blocker, and it is a *data acquisition* problem, not a coding one — grocery prices are regional, change weekly, and no free clean national source exists. Start with a single-region static price table you populate by hand for the ~200 most common ingredients. That is enough to prove the optimiser works, and it degrades honestly: without prices, the feature can still optimise for reuse and waste alone.
+
+**DoD:** given "7 dinners, vegetarian, ≥100g protein/day, under $70", returns a plan whose shopping list has fewer distinct ingredients than 7 randomly chosen recipes would, with a total cost under the cap, in under 3 seconds — and you'd actually cook all seven.
+
+---
 
 ### v2 — Workout plans
 Genuinely a second product: `exercises`, `workout_plans`, `plan_days`, `plan_exercises`, equipment-based substitution. Scope it as its own build plan when you get there. Don't let it creep into v1.
