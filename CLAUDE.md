@@ -114,4 +114,11 @@ If the DoD can't be met — a dependency is missing, a decision is needed from m
 - Live at **https://mise-mise14.vercel.app**; pushes to `main` redeploy automatically.
 - Repo is **public**, and `main` is protected — every change goes through a PR, including yours.
 
-Next up: **Phase 1, M1.1 — design the schema on paper first.** Produces `docs/SCHEMA-NOTES.md` with an ERD and a written rationale per table. No code, no Supabase project yet; M1.2 is where the migration lands.
+**Phase 1 — Data model: complete.** M1.1–M1.6 all closed. (There is no M1.5 in Phase 1; the plan numbers M1.4 → M1.6.)
+
+- Schema in `docs/SCHEMA-NOTES.md` — 16 tables, ERD, rationale. Read it before changing the database.
+- Three migrations applied; **RLS on and enforced**. `docs/RLS-TEST-PLAN.md` is the regression suite — re-run it after any policy change.
+- Six recipes seeded from the design mockup. `pnpm db:seed` is idempotent.
+- Typed clients in `src/lib/supabase/`, generated types in `src/types/database.ts`. **Re-run `pnpm db:types` after every migration** or the types silently go stale.
+
+Next up: **Phase 1.5, M1.5.1 — canonical ingredients and aliases** (everything in the catalog depends on it), or **Phase 2, M2.1 — design tokens** if you want something visible first. The plan orders 1.5 before 2.
